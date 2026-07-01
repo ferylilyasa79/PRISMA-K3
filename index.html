@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRISMA K3 - Sistem Informasi Manajemen K3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<style>
+/* ============================================================
+   PRISMA K3 - DESIGN TOKENS
+   ============================================================ */
+:root{
+  --navy-950:#081226;
+  --navy-900:#0B1F3A;
+  --navy-800:#11294D;
+  --navy-700:#173564;
+  --navy-600:#1F4480;
+  --steel-500:#5B7299;
+  --steel-300:#A9B8CF;
+  --steel-100:#E7ECF4;
+
+  --safety-yellow:#F4A300;
+  --safety-yellow-dark:#C9840A;
+  --hazard-red:#D7263D;
+  --hazard-red-dark:#A91B2D;
+  --safety-green:#1B998B;
+  --safety-green-dark:#147A6F;
+  --caution-amber:#E8871E;
+
+  --bg-canvas:#F5F6F4;
+  --bg-card:#FFFFFF;
+  --bg-subtle:#EEF1ED;
+  --ink-900:#15191E;
+  --ink-700:#3A414B;
+  --ink-500:#6B7280;
+  --ink-300:#A2A9B4;
+  --border-soft:#E2E5E0;
+  --border-strong:#CBD0CA;
+
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:16px;
+
+  --shadow-sm:0 1px 2px rgba(11,31,58,0.06), 0 1px 1px rgba(11,31,58,0.04);
+  --shadow-md:0 6px 16px rgba(11,31,58,0.08), 0 2px 4px rgba(11,31,58,0.04);
+  --shadow-lg:0 16px 40px rgba(11,31,58,0.16), 0 4px 10px rgba(11,31,58,0.06);
+
+  --font-display:'Barlow Condensed', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+[hidden]{ display:none !important; }
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink-900);
+  background:var(--bg-canvas);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{ font-family:var(--font-display); font-weight:700; margin:0; letter-spacing:0.01em; }
+p{ margin:0; }
+button{ font-family:inherit; cursor:pointer; }
+input,select,textarea{ font-family:inherit; }
+::selection{ background:var(--safety-yellow); color:var(--navy-900); }
+
+.hazard-stripe{
+  background-image:repeating-linear-gradient(135deg, var(--safety-yellow) 0 14px, var(--navy-900) 14px 28px);
+}
+.hazard-edge{ position:absolute; left:0; right:0; height:6px; z-index:5; }
+.hazard-edge.top{ top:0; background-image:repeating-linear-gradient(115deg, var(--safety-yellow) 0 18px, var(--navy-950) 18px 36px); }
+
+/* Login Screen */
+.login-screen{
+  position:fixed; inset:0; overflow:hidden;
+  background:var(--navy-950);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.login-overlay{
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 900px 600px at 18% 25%, rgba(244,163,0,0.10), transparent 60%),
+    radial-gradient(ellipse 700px 700px at 85% 80%, rgba(27,153,139,0.10), transparent 60%),
+    linear-gradient(180deg, rgba(8,18,38,0.55) 0%, rgba(8,18,38,0.82) 100%);
+  pointer-events:none;
+}
+.login-box{
+  position:relative; z-index:2;
+  width:min(420px, 92vw);
+  background:rgba(13,26,51,0.72);
+  border:1px solid rgba(244,163,0,0.18);
+  border-radius:var(--radius-lg);
+  padding:38px 36px 28px;
+  backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  animation:loginRise 0.7s cubic-bezier(.16,1,.3,1);
+}
+@keyframes loginRise{
+  from{ opacity:0; transform:translateY(18px) scale(0.98); }
+  to{ opacity:1; transform:translateY(0) scale(1); }
+}
+.login-brand{ display:flex; align-items:center; gap:12px; margin-bottom:26px; }
+.brand-mark{ flex:none; filter:drop-shadow(0 0 8px rgba(244,163,0,0.35)); }
+.brand-name{ font-family:var(--font-display); font-size:22px; font-weight:800; color:#fff; letter-spacing:0.03em; line-height:1; }
+.brand-name span{ color:var(--safety-yellow); }
+.brand-sub{ font-size:11px; color:var(--steel-300); margin-top:4px; max-width:230px; line-height:1.4; }
+.login-form h1{ color:#fff; font-size:26px; margin-bottom:6px; }
+.login-desc{ color:var(--steel-300); font-size:13px; line-height:1.5; margin-bottom:24px; }
+.field{ display:block; margin-bottom:16px; }
+.field-label{ display:block; font-size:12px; font-weight:600; color:var(--steel-300); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+.field input{
+  width:100%; padding:12px 14px; border-radius:var(--radius-sm);
+  border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05);
+  color:#fff; font-size:14px; outline:none; transition:border-color .15s, background .15s;
+}
+.field input::placeholder{ color:rgba(255,255,255,0.3); }
+.field input:focus{ border-color:var(--safety-yellow); background:rgba(255,255,255,0.08); }
+.login-error{
+  background:rgba(215,38,61,0.14); border:1px solid rgba(215,38,61,0.4);
+  color:#FF8C9A; font-size:12.5px; padding:10px 12px; border-radius:var(--radius-sm); margin-bottom:16px;
+}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; border-radius:var(--radius-sm); font-weight:700; font-size:14px;
+  padding:11px 20px; transition:transform .12s, box-shadow .12s, background .15s, opacity .15s;
+}
+.btn:active{ transform:translateY(1px); }
+.btn-block{ width:100%; }
+.btn-primary{ background:var(--safety-yellow); color:var(--navy-950); }
+.btn-primary:hover{ background:#FFB52E; box-shadow:0 6px 18px rgba(244,163,0,0.3); }
+.btn-secondary{ background:var(--navy-700); color:#fff; }
+.btn-secondary:hover{ background:var(--navy-600); }
+.btn-outline{ background:transparent; border:1.5px solid var(--border-strong); color:var(--ink-700); }
+.btn-outline:hover{ border-color:var(--navy-700); color:var(--navy-900); }
+.btn-danger{ background:rgba(215,38,61,0.1); color:var(--hazard-red); }
+.btn-danger:hover{ background:var(--hazard-red); color:#fff; }
+.btn-ghost{ background:transparent; color:var(--ink-500); padding:8px 10px; }
+.btn-ghost:hover{ background:var(--bg-subtle); color:var(--ink-900); }
+.btn-sm{ padding:7px 12px; font-size:12.5px; }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+.login-hint{
+  margin-top:16px; text-align:center; font-size:11.5px; color:var(--steel-300);
+}
+.login-hint code{ background:rgba(244,163,0,0.15); color:var(--safety-yellow); padding:2px 6px; border-radius:4px; font-family:var(--font-mono); }
+.login-footer{
+  margin-top:22px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08);
+  font-size:10.5px; color:var(--steel-300); text-align:center; letter-spacing:0.02em;
+  display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;
+}
+.status-dot{ width:7px; height:7px; border-radius:50%; background:var(--safety-green); box-shadow:0 0 0 3px rgba(27,153,139,0.25); display:inline-block; animation:pulse 2s infinite; }
+@keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+
+/* App Shell */
+.app-shell{ display:flex; min-height:100vh; }
+.sidebar{
+  width:252px; flex:none; background:var(--navy-950);
+  display:flex; flex-direction:column; padding:20px 14px;
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  background-image:linear-gradient(180deg, var(--navy-950) 0%, var(--navy-900) 100%);
+}
+.sidebar-brand{ display:flex; align-items:center; gap:10px; padding:6px 8px 18px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:16px; }
+.sidebar-brand-text{ font-family:var(--font-display); font-size:18px; font-weight:800; color:#fff; letter-spacing:0.03em; }
+.sidebar-brand-text span{ color:var(--safety-yellow); }
+.company-pill{
+  display:flex; align-items:center; gap:8px; background:rgba(244,163,0,0.1);
+  border:1px solid rgba(244,163,0,0.25); color:var(--safety-yellow);
+  font-size:11.5px; font-weight:600; padding:9px 11px; border-radius:var(--radius-sm);
+  margin-bottom:18px; line-height:1.3;
+}
+.company-pill svg{ flex:none; }
+.company-pill span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-menu{ flex:1; display:flex; flex-direction:column; gap:2px; }
+.nav-section-label{
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em;
+  color:var(--steel-500); padding:14px 10px 6px;
+}
+.nav-item{
+  display:flex; align-items:center; gap:10px; padding:10px 11px; border:none; background:transparent;
+  color:var(--steel-300); border-radius:var(--radius-sm); font-size:13.5px; font-weight:600; text-align:left;
+  transition:background .12s, color .12s;
+}
+.nav-item svg{ flex:none; opacity:0.85; }
+.nav-item:hover{ background:rgba(255,255,255,0.06); color:#fff; }
+.nav-item.active{ background:var(--safety-yellow); color:var(--navy-950); }
+.nav-item.active svg{ opacity:1; }
+.logout-btn{
+  display:flex; align-items:center; gap:8px; justify-content:center;
+  background:rgba(215,38,61,0.12); color:#FF8C9A; border:1px solid rgba(215,38,61,0.25);
+  padding:10px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; margin-top:10px;
+}
+.logout-btn:hover{ background:var(--hazard-red); color:#fff; }
+.main-content{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 32px; background:var(--bg-card); border-bottom:1px solid var(--border-soft);
+  position:sticky; top:0; z-index:10;
+}
+.topbar-title h1{ font-size:24px; color:var(--navy-900); }
+.topbar-title p{ font-size:12.5px; color:var(--ink-500); margin-top:2px; }
+.topbar-right{ display:flex; align-items:center; gap:18px; }
+.topbar-clock{ font-family:var(--font-mono); font-size:12px; color:var(--ink-500); background:var(--bg-subtle); padding:7px 12px; border-radius:var(--radius-sm); }
+.user-chip{ display:flex; align-items:center; gap:10px; }
+.user-avatar{
+  width:36px; height:36px; border-radius:50%; background:var(--navy-900); color:var(--safety-yellow);
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-family:var(--font-display); font-size:15px;
+}
+.user-name{ font-size:13px; font-weight:700; color:var(--ink-900); }
+.user-role{ font-size:11px; color:var(--ink-500); }
+.page-body{ padding:28px 32px 60px; flex:1; }
+.page-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:22px; flex-wrap:wrap; }
+.page-head-eyebrow{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--safety-yellow-dark); margin-bottom:4px; }
+.page-head h2{ font-size:26px; color:var(--navy-900); }
+.page-head-desc{ font-size:13px; color:var(--ink-500); margin-top:5px; max-width:560px; line-height:1.5; }
+.page-head-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+
+.stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card{
+  background:var(--bg-card); border:1px solid var(--border-soft); border-radius:var(--radius-md);
+  padding:18px 20px; position:relative; overflow:hidden; box-shadow:var(--shadow-sm);
+}
+.stat-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; }
+.stat-card.tone-navy::before{ background:var(--navy-700); }
+.stat-card.tone-yellow::before{ background:var(--safety-yellow); }
+.stat-card.tone-red::before{ background:var(--hazard-red); }
+.stat-card.tone-green::before{ background:var(--safety-green); }
+.stat-card.tone-amber::before{ background:var(--caution-amber); }
+@media (max-width:900px){ .dash-grid{ grid-template-columns:1fr !important; } }
+.stat-label{ font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-500); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+.stat-value{ font-family:var(--font-display); font-size:36px; font-weight:800; color:var(--navy-900); line-height:1; }
+.stat-foot{ font-size:11.5px; color:var(--ink-500); margin-top:8px; }
+
+.card{ background:var(--bg-card); border:1px solid var(--border-soft); border-radius:var(--radius-md); box-shadow:var(--shadow-sm); }
+.card-pad{ padding:22px; }
+.card-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border-soft); }
+.card-head h3{ font-size:17px; color:var(--navy-900); }
+.empty-state{ text-align:center; padding:48px 24px; color:var(--ink-500); }
+.empty-state svg{ margin-bottom:14px; opacity:0.4; }
+.empty-state h4{ font-size:16px; color:var(--ink-700); margin-bottom:6px; }
+.empty-state p{ font-size:13px; max-width:340px; margin:0 auto 16px; line-height:1.5; }
+
+.badge{ display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.03em; white-space:nowrap; }
+.badge-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge-red{ background:rgba(215,38,61,0.1); color:var(--hazard-red); }
+.badge-amber{ background:rgba(232,135,30,0.12); color:var(--caution-amber); }
+.badge-yellow{ background:rgba(244,163,0,0.14); color:var(--safety-yellow-dark); }
+.badge-green{ background:rgba(27,153,139,0.12); color:var(--safety-green-dark); }
+.badge-navy{ background:rgba(11,31,58,0.08); color:var(--navy-800); }
+.badge-gray{ background:var(--bg-subtle); color:var(--ink-500); }
+
+.table-wrap{ overflow-x:auto; }
+table.data-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.data-table thead th{
+  text-align:left; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+  color:var(--ink-500); padding:12px 16px; background:var(--bg-subtle); white-space:nowrap;
+  border-bottom:1px solid var(--border-soft);
+}
+.data-table tbody td{ padding:13px 16px; border-bottom:1px solid var(--border-soft); color:var(--ink-700); vertical-align:top; }
+.data-table tbody tr:last-child td{ border-bottom:none; }
+.data-table tbody tr:hover{ background:rgba(244,163,0,0.04); }
+.cell-strong{ font-weight:700; color:var(--ink-900); }
+.cell-mono{ font-family:var(--font-mono); font-size:12px; color:var(--ink-500); }
+.row-actions{ display:flex; gap:6px; }
+.icon-btn{
+  width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--border-soft); background:#fff; border-radius:var(--radius-sm); color:var(--ink-500);
+  transition:all .12s;
+}
+.icon-btn:hover{ border-color:var(--navy-700); color:var(--navy-900); background:var(--bg-subtle); }
+.icon-btn.danger:hover{ border-color:var(--hazard-red); color:var(--hazard-red); background:rgba(215,38,61,0.06); }
+
+.filter-bar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+.search-input{ position:relative; flex:1; min-width:200px; max-width:320px; }
+.search-input svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ink-300); }
+.search-input input{ width:100%; padding:9px 12px 9px 36px; border:1px solid var(--border-soft); border-radius:var(--radius-sm); font-size:13px; outline:none; background:#fff; }
+.search-input input:focus{ border-color:var(--navy-600); }
+.select-filter{ padding:9px 30px 9px 12px; border:1px solid var(--border-soft); border-radius:var(--radius-sm); font-size:13px; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%236B7280' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center; appearance:none; outline:none; color:var(--ink-700); }
+
+/* Modal */
+.modal-backdrop{
+  position:fixed; inset:0; background:rgba(8,18,38,0.6); backdrop-filter:blur(3px);
+  display:flex; align-items:flex-start; justify-content:center; z-index:100; padding:40px 16px;
+  overflow-y:auto; animation:fadeIn .15s ease;
+}
+@keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+.modal{
+  background:#fff; border-radius:var(--radius-lg); width:min(720px,100%);
+  box-shadow:var(--shadow-lg); animation:modalRise .22s cubic-bezier(.16,1,.3,1);
+  max-height:calc(100vh - 80px); display:flex; flex-direction:column;
+}
+.modal.modal-wide{ width:min(920px,100%); }
+@keyframes modalRise{ from{ opacity:0; transform:translateY(14px) scale(0.98); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.modal-head{
+  display:flex; align-items:center; justify-content:space-between; padding:20px 24px;
+  border-bottom:1px solid var(--border-soft); flex:none;
+}
+.modal-head h3{ font-size:19px; color:var(--navy-900); }
+.modal-head-sub{ font-size:12px; color:var(--ink-500); margin-top:2px; }
+.modal-close{ background:none; border:none; color:var(--ink-500); padding:6px; border-radius:6px; }
+.modal-close:hover{ background:var(--bg-subtle); color:var(--ink-900); }
+.modal-body{ padding:22px 24px; overflow-y:auto; }
+.modal-foot{ display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid var(--border-soft); flex:none; background:var(--bg-subtle); border-radius:0 0 var(--radius-lg) var(--radius-lg); }
+
+/* Preview Modal */
+.preview-modal{
+  width:min(960px,100%);
+  max-height:calc(100vh - 40px);
+}
+.preview-modal .modal-body{
+  padding:0;
+  overflow:hidden;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+.preview-iframe{
+  width:100%;
+  height:100%;
+  min-height:500px;
+  border:none;
+  background:var(--bg-subtle);
+}
+.preview-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  background:var(--navy-950);
+  border-bottom:1px solid var(--border-soft);
+}
+.preview-toolbar-title{
+  color:#fff;
+  font-size:13px;
+  font-weight:600;
+}
+.preview-toolbar-actions{
+  display:flex;
+  gap:10px;
+}
+.preview-empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:400px;
+  color:var(--ink-500);
+  text-align:center;
+  padding:40px;
+}
+
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.form-grid .span-2{ grid-column:1/-1; }
+@media (max-width:640px){ .form-grid{ grid-template-columns:1fr; } }
+.form-group{ margin-bottom:0; }
+.form-group label{ display:block; font-size:12px; font-weight:700; color:var(--ink-700); margin-bottom:6px; }
+.form-group .hint{ font-size:11px; color:var(--ink-500); font-weight:400; margin-left:4px; }
+.form-control{
+  width:100%; padding:10px 12px; border:1px solid var(--border-soft); border-radius:var(--radius-sm);
+  font-size:13.5px; outline:none; transition:border-color .12s, box-shadow .12s; color:var(--ink-900); background:#fff;
+}
+.form-control:focus{ border-color:var(--navy-600); box-shadow:0 0 0 3px rgba(31,68,128,0.1); }
+textarea.form-control{ resize:vertical; min-height:72px; line-height:1.5; }
+select.form-control{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%236B7280' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; appearance:none; padding-right:32px; }
+.form-section{ margin-bottom:22px; }
+.form-section:last-child{ margin-bottom:0; }
+.form-section-title{
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--navy-700);
+  display:flex; align-items:center; gap:8px; margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid var(--bg-subtle);
+}
+.form-section-title .num{
+  width:20px; height:20px; border-radius:50%; background:var(--safety-yellow); color:var(--navy-950);
+  font-size:11px; display:inline-flex; align-items:center; justify-content:center; font-weight:800;
+}
+.pill-group{ display:flex; flex-wrap:wrap; gap:8px; }
+.pill-option{
+  display:flex; align-items:center; gap:6px; padding:8px 13px; border:1.5px solid var(--border-soft);
+  border-radius:999px; font-size:12.5px; font-weight:600; color:var(--ink-700); background:#fff;
+}
+.pill-option input{ accent-color:var(--navy-700); }
+.pill-option.checked{ border-color:var(--navy-700); background:rgba(31,68,128,0.06); color:var(--navy-900); }
+.repeat-row{ display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:start; margin-bottom:10px; padding:12px; background:var(--bg-subtle); border-radius:var(--radius-sm); }
+.repeat-row .remove-row{ align-self:center; }
+.add-row-btn{ display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--navy-700); background:none; border:1.5px dashed var(--border-strong); padding:9px 14px; border-radius:var(--radius-sm); width:100%; justify-content:center; }
+.add-row-btn:hover{ border-color:var(--navy-700); background:rgba(31,68,128,0.04); }
+.risk-matrix{ display:grid; grid-template-columns:repeat(5,1fr); gap:3px; max-width:420px; }
+.risk-cell{ aspect-ratio:1; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:700; font-size:13px; color:#fff; cursor:pointer; transition:transform .1s; border:2px solid transparent; }
+.risk-cell:hover{ transform:scale(1.06); }
+.risk-cell.selected{ border-color:var(--navy-900); box-shadow:0 0 0 2px #fff inset; }
+.risk-low{ background:var(--safety-green); }
+.risk-medium{ background:var(--safety-yellow-dark); }
+.risk-high{ background:var(--caution-amber); }
+.risk-extreme{ background:var(--hazard-red); }
+.risk-score-display{ display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--radius-sm); margin-top:12px; }
+
+.toast-container{ position:fixed; bottom:22px; right:22px; z-index:200; display:flex; flex-direction:column; gap:10px; }
+.toast{
+  background:var(--navy-950); color:#fff; padding:13px 18px; border-radius:var(--radius-sm);
+  font-size:13px; font-weight:600; box-shadow:var(--shadow-lg); display:flex; align-items:center; gap:10px;
+  min-width:260px; animation:toastIn .25s cubic-bezier(.16,1,.3,1); border-left:4px solid var(--safety-yellow);
+}
+.toast.success{ border-left-color:var(--safety-green); }
+.toast.error{ border-left-color:var(--hazard-red); }
+@keyframes toastIn{ from{ opacity:0; transform:translateX(30px); } to{ opacity:1; transform:translateX(0); } }
+
+.company-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.company-card{
+  background:#fff; border:1px solid var(--border-soft); border-radius:var(--radius-md); padding:20px;
+  position:relative; transition:box-shadow .15s, border-color .15s;
+}
+.company-card:hover{ box-shadow:var(--shadow-md); }
+.company-card.is-active{ border-color:var(--safety-yellow); box-shadow:0 0 0 3px rgba(244,163,0,0.12); }
+.company-card-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px; }
+.company-icon{ width:42px; height:42px; border-radius:10px; background:var(--navy-900); color:var(--safety-yellow); display:flex; align-items:center; justify-content:center; flex:none; }
+.company-card-name{ font-size:16px; font-weight:800; font-family:var(--font-display); color:var(--navy-900); margin-bottom:3px; }
+.company-card-addr{ font-size:12px; color:var(--ink-500); line-height:1.4; margin-bottom:12px; }
+.company-card-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.company-card-actions{ display:flex; gap:8px; border-top:1px solid var(--border-soft); padding-top:12px; }
+.active-tag{ position:absolute; top:14px; right:14px; }
+.industry-icon-wrap{ width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex:none; }
+.sector-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+.sector-option{
+  border:1.5px solid var(--border-soft); border-radius:var(--radius-sm); padding:12px 10px; text-align:center; cursor:pointer; transition:all .12s;
+}
+.sector-option:hover{ border-color:var(--steel-500); }
+.sector-option.checked{ border-color:var(--navy-700); background:rgba(31,68,128,0.05); }
+.sector-option svg{ margin-bottom:8px; }
+.sector-option-label{ font-size:11.5px; font-weight:700; color:var(--ink-700); }
+
+.tab-bar{ display:flex; gap:4px; background:var(--bg-subtle); padding:4px; border-radius:var(--radius-sm); margin-bottom:20px; width:fit-content; }
+.tab-btn{ padding:8px 16px; border:none; background:none; font-size:12.5px; font-weight:700; color:var(--ink-500); border-radius:6px; }
+.tab-btn.active{ background:#fff; color:var(--navy-900); box-shadow:var(--shadow-sm); }
+.kv-list{ display:grid; grid-template-columns:140px 1fr; gap:8px 14px; font-size:13px; }
+.kv-list dt{ color:var(--ink-500); font-weight:600; }
+.kv-list dd{ margin:0; color:var(--ink-900); }
+.severity-tag{ display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:12px; }
+.attach-note{ display:flex; gap:8px; align-items:flex-start; background:rgba(244,163,0,0.08); border:1px solid rgba(244,163,0,0.25); padding:10px 12px; border-radius:var(--radius-sm); font-size:12px; color:var(--safety-yellow-dark); margin-top:8px; }
+.scrollbar-thin::-webkit-scrollbar{ width:8px; height:8px; }
+.scrollbar-thin::-webkit-scrollbar-thumb{ background:var(--border-strong); border-radius:4px; }
+@media (max-width:980px){
+  .sidebar{ position:fixed; left:-260px; z-index:50; transition:left .2s; box-shadow:var(--shadow-lg); }
+  .sidebar.open{ left:0; }
+  .form-grid{ grid-template-columns:1fr; }
+  .repeat-row{ grid-template-columns:1fr; }
+}
+</style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+
+<!-- ============ HALAMAN LOGIN ============ -->
+<div id="loginScreen" class="login-screen">
+  <div class="hazard-edge top"></div>
+  <canvas id="loginCanvas" class="login-canvas"></canvas>
+  <div class="login-overlay"></div>
+
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 64 64" width="40" height="40">
+          <path d="M32 4 L58 16 V32 C58 46 47 56 32 60 C17 56 6 46 6 32 V16 Z" fill="none" stroke="#F4A300" stroke-width="3"/>
+          <path d="M32 18 L32 36" stroke="#F4A300" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="32" cy="46" r="2.6" fill="#F4A300"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">PRISMA <span>K3</span></div>
+        <div class="brand-sub">Sistem Informasi Manajemen Keselamatan &amp; Kesehatan Kerja</div>
+      </div>
+    </div>
+
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <h1>Masuk ke Sistem</h1>
+      <p class="login-desc">Akses panel manajemen risiko, inspeksi lapangan, dan investigasi insiden.</p>
+      <label class="field">
+        <span class="field-label">Nama Pengguna</span>
+        <input type="text" id="loginUser" placeholder="admin" required>
+      </label>
+      <label class="field">
+        <span class="field-label">Kata Sandi</span>
+        <input type="password" id="loginPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" required>
+      </label>
+      <div id="loginError" class="login-error" hidden>Nama pengguna atau kata sandi salah. Silakan coba lagi.</div>
+      <button type="submit" class="btn btn-primary btn-block">
+        <span>Masuk</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="login-hint">Kredensial demo &mdash; Pengguna: <code>admin</code> &nbsp;Sandi: <code>admin</code></div>
+    </form>
+
+    <div class="login-footer">
+      <span class="status-dot"></span> Zero Accident &nbsp;&bull;&nbsp; Patuh OSHA &amp; ISO 45001 &nbsp;&bull;&nbsp; Data tersimpan lokal di perangkat Anda
+    </div>
+  </div>
+</div>
+
+<!-- ============ APLIKASI UTAMA ============ -->
+<div id="appShell" class="app-shell" hidden>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <svg viewBox="0 0 64 64" width="30" height="30">
+        <path d="M32 4 L58 16 V32 C58 46 47 56 32 60 C17 56 6 46 6 32 V16 Z" fill="none" stroke="#F4A300" stroke-width="3"/>
+        <path d="M32 18 L32 36" stroke="#F4A300" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="32" cy="46" r="2.6" fill="#F4A300"/>
+      </svg>
+      <div class="sidebar-brand-text">PRISMA <span>K3</span></div>
+    </div>
+    <div class="company-pill" id="activeCompanyPill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span id="activeCompanyName">Belum ada perusahaan dipilih</span>
+    </div>
+    <nav class="nav-menu">
+      <div class="nav-section-label">Utama</div>
+      <button class="nav-item active" data-page="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="3" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="14" y="12" width="7" height="9" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="7" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>
+        Dashboard
+      </button>
+      <div class="nav-section-label">Modul K3</div>
+      <button class="nav-item" data-page="risiko">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2 22 20H2L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/></svg>
+        Manajemen Risiko
+      </button>
+      <button class="nav-item" data-page="inspeksi">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Inspeksi K3
+      </button>
+      <button class="nav-item" data-page="investigasi">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        Investigasi Insiden
+      </button>
+      <div class="nav-section-label">Pengaturan</div>
+      <button class="nav-item" data-page="perusahaan">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Profil Perusahaan
+      </button>
+    </nav>
+    <button id="logoutBtn" class="logout-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Keluar
+    </button>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSubtitle">Ringkasan kinerja keselamatan &amp; kesehatan kerja</p>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="topbarClock"></div>
+        <div class="user-chip">
+          <div class="user-avatar">A</div>
+          <div>
+            <div class="user-name">Admin K3</div>
+            <div class="user-role">Kepala HSE</div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="page-body" id="pageBody"></div>
+  </main>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   STORAGE LAYER - localStorage persistence
+   ============================================================ */
+const DB = {
+  KEYS: {
+    AUTH: 'prismak3_auth',
+    COMPANIES: 'prismak3_companies',
+    ACTIVE_COMPANY: 'prismak3_active_company',
+    RISKS: 'prismak3_risks',
+    INSPECTIONS: 'prismak3_inspections',
+    INVESTIGATIONS: 'prismak3_investigations',
+    INITIALIZED: 'prismak3_initialized',
+  },
+
+  _read(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      if(raw === null) return fallback;
+      return JSON.parse(raw);
+    }catch(e){
+      console.error('DB read error', key, e);
+      return fallback;
+    }
+  },
+  _write(key, value){
+    try{
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    }catch(e){
+      console.error('DB write error', key, e);
+      return false;
+    }
+  },
+
+  isLoggedIn(){ return this._read(this.KEYS.AUTH, false) === true; },
+  setLoggedIn(v){ this._write(this.KEYS.AUTH, !!v); },
+
+  getCompanies(){ return this._read(this.KEYS.COMPANIES, []); },
+  saveCompanies(list){ this._write(this.KEYS.COMPANIES, list); },
+  getActiveCompanyId(){ return this._read(this.KEYS.ACTIVE_COMPANY, null); },
+  setActiveCompanyId(id){ this._write(this.KEYS.ACTIVE_COMPANY, id); },
+
+  getRisks(){ return this._read(this.KEYS.RISKS, []); },
+  saveRisks(list){ this._write(this.KEYS.RISKS, list); },
+
+  getInspections(){ return this._read(this.KEYS.INSPECTIONS, []); },
+  saveInspections(list){ this._write(this.KEYS.INSPECTIONS, list); },
+
+  getInvestigations(){ return this._read(this.KEYS.INVESTIGATIONS, []); },
+  saveInvestigations(list){ this._write(this.KEYS.INVESTIGATIONS, list); },
+
+  isInitialized(){ return this._read(this.KEYS.INITIALIZED, false) === true; },
+  markInitialized(){ this._write(this.KEYS.INITIALIZED, true); },
+
+  genId(prefix){
+    return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  },
+
+  seedIfEmpty(){
+    if(this.isInitialized()) return;
+    if(this.getCompanies().length === 0){
+      const sample = {
+        id: this.genId('co'),
+        name: 'PT Industri Banten Sejahtera',
+        address: 'Kawasan Industri Modern, Jl. Raya Cilegon KM 5, Cilegon, Banten',
+        engagementType: 'barang',
+        sector: 'manufaktur',
+        pic: 'Ir. Bambang Wijaya, M.T.',
+        employees: 248,
+        createdAt: new Date().toISOString(),
+      };
+      this.saveCompanies([sample]);
+      this.setActiveCompanyId(sample.id);
+    }
+    this.markInitialized();
+  }
+};
+</script>
+
+<script>
+/* ============================================================
+   LOGIN LOGIC
+   ============================================================ */
+(function(){
+  function initLoginCanvas(){
+    const canvas = document.getElementById('loginCanvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [];
+    function resize(){
+      w = canvas.width = canvas.offsetWidth * devicePixelRatio;
+      h = canvas.height = canvas.offsetHeight * devicePixelRatio;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    const COUNT = 46;
+    for(let i=0;i<COUNT;i++){
+      particles.push({
+        x: Math.random()*w, y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.18*devicePixelRatio,
+        vy: (Math.random()-0.5)*0.18*devicePixelRatio,
+        r: (Math.random()*1.6+1)*devicePixelRatio,
+        beacon: Math.random() < 0.12,
+        phase: Math.random()*Math.PI*2,
+      });
+    }
+    let stripeOffset = 0;
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      const stripeW = 40*devicePixelRatio;
+      stripeOffset = (stripeOffset + 0.15*devicePixelRatio) % (stripeW*2);
+      ctx.translate(-stripeOffset, 0);
+      for(let x=-stripeW*2; x<w+stripeW*2; x+=stripeW*2){
+        ctx.beginPath(); ctx.moveTo(x, h); ctx.lineTo(x+stripeW, h); ctx.lineTo(x+stripeW*1.5+h*0.4, h - h); ctx.lineTo(x+stripeW*0.5+h*0.4, h - h); ctx.closePath();
+        ctx.fillStyle = '#F4A300'; ctx.fill();
+      }
+      ctx.restore();
+      for(let i=0;i<particles.length;i++){
+        const p = particles[i]; p.x += p.vx; p.y += p.vy;
+        if(p.x<0||p.x>w) p.vx*=-1; if(p.y<0||p.y>h) p.vy*=-1;
+        for(let j=i+1;j<particles.length;j++){
+          const q = particles[j], dx = p.x-q.x, dy = p.y-q.y, dist = Math.sqrt(dx*dx+dy*dy), maxDist = 150*devicePixelRatio;
+          if(dist < maxDist){ ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.strokeStyle = `rgba(91,114,153,${0.16*(1-dist/maxDist)})`; ctx.lineWidth = 1*devicePixelRatio; ctx.stroke(); }
+        }
+      }
+      for(const p of particles){
+        p.phase += 0.02; const pulse = p.beacon ? (Math.sin(p.phase)*0.5+0.5) : 1;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (p.beacon ? 1.8 : 1), 0, Math.PI*2);
+        ctx.fillStyle = p.beacon ? `rgba(244,163,0,${0.35+pulse*0.5})` : 'rgba(169,184,207,0.45)'; ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  }
+  function showLogin(){ document.getElementById('loginScreen').hidden = false; document.getElementById('appShell').hidden = true; }
+  function showApp(){ document.getElementById('loginScreen').hidden = true; document.getElementById('appShell').hidden = false; }
+  function handleLoginSubmit(e){
+    e.preventDefault();
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    const errBox = document.getElementById('loginError');
+    if(user === 'admin' && pass === 'admin'){
+      errBox.hidden = true; DB.setLoggedIn(true); showApp(); AppCore.boot();
+    }else{
+      errBox.hidden = false;
+      document.querySelector('.login-box').animate([{transform:'translateX(0)'},{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(0)'}],{duration:300});
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    initLoginCanvas();
+    document.getElementById('loginForm').addEventListener('submit', handleLoginSubmit);
+    if(DB.isLoggedIn()){ showApp(); AppCore.boot(); }else{ showLogin(); }
+  });
+  window.LoginScreen = { showLogin, showApp };
+})();
+</script>
+
+<script>
+/* ============================================================
+   APP CORE - Router, Toast, Modal helpers, Utilities
+   ============================================================ */
+const AppCore = (function(){
+  const PAGES = {
+    dashboard: { title:'Dashboard', subtitle:'Ringkasan kinerja keselamatan & kesehatan kerja' },
+    risiko: { title:'Manajemen Risiko', subtitle:'Identifikasi bahaya, kajian, pengendalian, komunikasi & monitoring risiko K3' },
+    inspeksi: { title:'Inspeksi K3', subtitle:'Pemeriksaan kondisi & tindakan tidak aman di lapangan' },
+    investigasi: { title:'Investigasi Insiden', subtitle:'Pelaporan dan analisis akar penyebab kecelakaan kerja' },
+    perusahaan: { title:'Profil Perusahaan', subtitle:'Kelola data perusahaan yang dikelola dalam sistem' },
+  };
+  let currentPage = 'dashboard';
+
+  function boot(){ DB.seedIfEmpty(); bindNav(); bindClock(); bindLogout(); renderCompanyPill(); navigateTo('dashboard'); }
+  function bindNav(){ document.querySelectorAll('.nav-item').forEach(btn=> btn.addEventListener('click', ()=> navigateTo(btn.dataset.page))); }
+  function bindLogout(){
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+      openConfirm({
+        title:'Keluar dari Sistem',
+        message:'Anda akan keluar dari PRISMA K3. Seluruh data yang telah diisi tetap tersimpan secara lokal di perangkat ini.',
+        confirmLabel:'Ya, Keluar', tone:'danger',
+        onConfirm:()=>{ DB.setLoggedIn(false); location.reload(); }
+      });
+    });
+  }
+  function bindClock(){
+    function tick(){
+      const el = document.getElementById('topbarClock'); if(!el) return;
+      const d = new Date(), opts = { weekday:'long', day:'2-digit', month:'long', year:'numeric' };
+      const dateStr = d.toLocaleDateString('id-ID', opts), timeStr = d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      el.textContent = dateStr + '  \u2022  ' + timeStr;
+    }
+    tick(); setInterval(tick, 1000);
+  }
+  function navigateTo(page){
+    currentPage = page;
+    document.querySelectorAll('.nav-item').forEach(b=> b.classList.toggle('active', b.dataset.page===page));
+    document.getElementById('pageTitle').textContent = PAGES[page].title;
+    document.getElementById('pageSubtitle').textContent = PAGES[page].subtitle;
+    const body = document.getElementById('pageBody'); body.innerHTML = '';
+    switch(page){
+      case 'dashboard': DashboardPage.render(body); break;
+      case 'risiko': RisikoPage.render(body); break;
+      case 'inspeksi': InspeksiPage.render(body); break;
+      case 'investigasi': InvestigasiPage.render(body); break;
+      case 'perusahaan': PerusahaanPage.render(body); break;
+    }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+  function renderCompanyPill(){
+    const companies = DB.getCompanies(), activeId = DB.getActiveCompanyId(), active = companies.find(c=>c.id===activeId);
+    document.getElementById('activeCompanyName').textContent = active ? active.name : 'Belum ada perusahaan dipilih';
+  }
+
+  function toast(message, type='info'){
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div'); el.className = 'toast ' + type;
+    const icon = type==='success' ? '\u2713' : type==='error' ? '\u2715' : '!';
+    el.innerHTML = '<span style="font-weight:800">' + icon + '</span><span>' + message + '</span>';
+    container.appendChild(el);
+    setTimeout(()=>{ el.style.transition='opacity .25s, transform .25s'; el.style.opacity='0'; el.style.transform='translateX(30px)'; setTimeout(()=> el.remove(), 260); }, 3200);
+  }
+
+  // ===== MODAL SYSTEM =====
+  let _activeBlobUrl = null;
+
+  function openModal({title, subtitle, bodyHtml, wide=false, footHtml, onMount, onClose}){
+    closeModal();
+    const root = document.getElementById('modalRoot');
+    const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; backdrop.id = 'activeModalBackdrop';
+    backdrop.innerHTML = '<div class="modal ' + (wide?'modal-wide':'') + '">' +
+      '<div class="modal-head">' +
+        '<div><h3>' + title + '</h3>' + (subtitle ? '<div class="modal-head-sub">' + subtitle + '</div>':'') + '</div>' +
+        '<button class="modal-close" id="modalCloseBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+      '</div>' +
+      '<div class="modal-body" id="modalBodyEl">' + bodyHtml + '</div>' +
+      (footHtml ? '<div class="modal-foot">' + footHtml + '</div>' : '') +
+    '</div>';
+    root.appendChild(backdrop);
+    backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(onClose); });
+    document.getElementById('modalCloseBtn').addEventListener('click', ()=> closeModal(onClose));
+    if(onMount) onMount(backdrop);
+  }
+
+  function closeModal(onClose){
+    // Cleanup blob URL if exists
+    if(_activeBlobUrl){
+      try{ URL.revokeObjectURL(_activeBlobUrl); }catch(e){}
+      _activeBlobUrl = null;
+    }
+    const el = document.getElementById('activeModalBackdrop');
+    if(el){ el.remove(); if(onClose) onClose(); }
+  }
+
+  function openConfirm({title, message, confirmLabel='Konfirmasi', tone='primary', onConfirm}){
+    openModal({
+      title, bodyHtml: '<p style="font-size:13.5px; color:var(--ink-700); line-height:1.6;">' + message + '</p>',
+      footHtml: '<button class="btn btn-outline" id="confirmCancelBtn">Batal</button><button class="btn ' + (tone==='danger'?'btn-danger':'btn-primary') + '" id="confirmOkBtn">' + confirmLabel + '</button>',
+      onMount: ()=>{
+        document.getElementById('confirmCancelBtn').addEventListener('click', ()=> closeModal());
+        document.getElementById('confirmOkBtn').addEventListener('click', ()=>{ closeModal(); onConfirm(); });
+      }
+    });
+  }
+
+  // ===== PREVIEW MODAL (PERBAIKAN) =====
+  function openPreviewModal({title, generateFn, onDownload}){
+    closeModal(); // Tutup modal lain jika ada
+    const root = document.getElementById('modalRoot');
+    const backdrop = document.createElement('div'); backdrop.className = 'modal-backdrop'; backdrop.id = 'activeModalBackdrop';
+    backdrop.innerHTML = '<div class="modal preview-modal">' +
+      '<div class="modal-head">' +
+        '<div><h3>Preview Laporan</h3><div class="modal-head-sub">' + title + '</div></div>' +
+        '<button class="modal-close" id="modalCloseBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+      '</div>' +
+      '<div class="preview-toolbar">' +
+        '<span class="preview-toolbar-title">' + title + '</span>' +
+        '<div class="preview-toolbar-actions">' +
+          '<button class="btn btn-sm btn-primary" id="previewDownloadBtn">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+            'Unduh PDF' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="modal-body" id="previewBody">' +
+        '<div class="preview-empty">' +
+          '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin-bottom:12px; opacity:0.5;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>' +
+          '<p>Memuat preview...</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+    root.appendChild(backdrop);
+    backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) closeModal(); });
+    document.getElementById('modalCloseBtn').addEventListener('click', ()=> closeModal());
+    document.getElementById('previewDownloadBtn').addEventListener('click', ()=>{ if(onDownload) onDownload(); });
+
+    // Generate PDF blob for preview - dengan error handling yang lebih baik
+    try {
+      const doc = generateFn();
+      if(doc && typeof doc.output === 'function'){
+        const blob = doc.output('blob');
+        const url = URL.createObjectURL(blob);
+        _activeBlobUrl = url; // Simpan untuk cleanup
+        const previewBody = document.getElementById('previewBody');
+        if(previewBody){
+          previewBody.innerHTML = '<iframe class="preview-iframe" src="' + url + '" title="Preview Laporan"></iframe>';
+        }
+      } else {
+        throw new Error('Fungsi generate tidak mengembalikan objek jsPDF yang valid');
+      }
+    } catch(err) {
+      console.error('Preview generation error:', err);
+      const previewBody = document.getElementById('previewBody');
+      if(previewBody){
+        previewBody.innerHTML = '<div class="preview-empty">' +
+          '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin-bottom:12px; color:var(--hazard-red);"><path d="M12 9v4m0 4h.01M10.3 3.86L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.86a2 2 0 0 0-3.4 0z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' +
+          '<p style="color:var(--hazard-red); font-weight:600;">Gagal memuat preview</p>' +
+          '<p style="font-size:12px; margin-top:4px;">' + (err.message || 'Terjadi kesalahan saat generate PDF') + '</p>' +
+        '</div>';
+      }
+    }
+  }
+
+  function fmtDate(iso){ if(!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }); }
+  function fmtDateTime(iso){ if(!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) + ' ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+  function escapeHtml(str){ if(str===null||str===undefined) return ''; return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function requireActiveCompany(){ const id = DB.getActiveCompanyId(), companies = DB.getCompanies(); return companies.find(c=>c.id===id) || null; }
+  function refreshCurrentPage(){ navigateTo(currentPage); }
+
+  return { boot, navigateTo, toast, openModal, closeModal, openConfirm, openPreviewModal, fmtDate, fmtDateTime, escapeHtml, requireActiveCompany, renderCompanyPill, refreshCurrentPage };
+})();
+</script>
+
+<script>
+/* ============================================================
+   MODUL: MANAJEMEN RISIKO
+   ============================================================ */
+const RisikoPage = (function(){
+  const LIKELIHOOD = [
+    {v:1, label:'Jarang Terjadi'},{v:2, label:'Kemungkinan Kecil'},{v:3, label:'Mungkin Terjadi'},{v:4, label:'Sering Terjadi'},{v:5, label:'Hampir Pasti Terjadi'},
+  ];
+  const SEVERITY = [
+    {v:1, label:'Tidak Signifikan'},{v:2, label:'Kecil'},{v:3, label:'Sedang'},{v:4, label:'Berat'},{v:5, label:'Bencana / Fatal'},
+  ];
+  const HAZARD_TYPES = ['Fisik','Kimia','Biologi','Ergonomi','Psikososial','Mekanik','Listrik','Lingkungan Kerja'];
+  const HOC_LEVELS = [
+    {key:'eliminasi', label:'Eliminasi', desc:'Menghilangkan sumber bahaya sepenuhnya'},
+    {key:'substitusi', label:'Substitusi', desc:'Mengganti dengan material/proses yang lebih aman'},
+    {key:'rekayasa', label:'Rekayasa Teknik', desc:'Engineering control: isolasi, ventilasi, guarding'},
+    {key:'administratif', label:'Administratif', desc:'SOP, rotasi kerja, pelatihan, rambu peringatan'},
+    {key:'apd', label:'Alat Pelindung Diri (APD)', desc:'Lapisan kendali terakhir bagi pekerja'},
+  ];
+
+  function riskLevel(score){
+    if(score<=4) return {label:'Rendah', cls:'risk-low', badge:'badge-green'};
+    if(score<=9) return {label:'Sedang', cls:'risk-medium', badge:'badge-yellow'};
+    if(score<=15) return {label:'Tinggi', cls:'risk-high', badge:'badge-amber'};
+    return {label:'Ekstrem', cls:'risk-extreme', badge:'badge-red'};
+  }
+
+  function render(container){
+    const company = AppCore.requireActiveCompany();
+    const risks = DB.getRisks().filter(r=> !company || r.companyId===company.id);
+    container.innerHTML = '<div class="page-head">' +
+      '<div>' +
+        '<div class="page-head-eyebrow">5 Elemen Terintegrasi</div>' +
+        '<h2>Manajemen Risiko K3</h2>' +
+        '<p class="page-head-desc">Identifikasi bahaya &rarr; Kajian risiko &rarr; Pengendalian (Hierarchy of Control) &rarr; Komunikasi &rarr; Monitoring kinerja, dalam satu siklus HIRADC.</p>' +
+      '</div>' +
+      '<div class="page-head-actions">' +
+        '<button class="btn btn-outline btn-preview-all" ' + (risks.length===0?'disabled':'') + ' data-type="risk-recap" title="Preview Rekap Laporan">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+          'Preview Rekap' +
+        '</button>' +
+        '<button class="btn btn-outline" id="btnExportAllRisk" ' + (risks.length===0?'disabled':'') + '>' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          'Unduh Rekap Laporan' +
+        '</button>' +
+        '<button class="btn btn-primary" id="btnAddRisk" ' + (!company?'disabled':'') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' +
+          'Identifikasi Risiko Baru' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+    statGrid(risks) +
+    '<div class="filter-bar">' +
+      '<div class="search-input">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+        '<input type="text" id="riskSearch" placeholder="Cari bahaya, area kerja, aktivitas...">' +
+      '</div>' +
+      '<select class="select-filter" id="riskLevelFilter">' +
+        '<option value="">Semua Tingkat Risiko</option><option>Rendah</option><option>Sedang</option><option>Tinggi</option><option>Ekstrem</option>' +
+      '</select>' +
+    '</div>' +
+    '<div class="card"><div class="table-wrap" id="riskTableWrap"></div></div>';
+
+    renderTable(risks);
+    container.querySelector('#riskSearch').addEventListener('input', applyFilters);
+    container.querySelector('#riskLevelFilter').addEventListener('change', applyFilters);
+    function applyFilters(){
+      const q = container.querySelector('#riskSearch').value.toLowerCase(), lvl = container.querySelector('#riskLevelFilter').value;
+      const filtered = risks.filter(r=>{ const matchQ = !q || (r.hazardDesc+r.area+r.activity).toLowerCase().includes(q); const matchL = !lvl || riskLevel(r.initialScore).label===lvl; return matchQ && matchL; });
+      renderTable(filtered);
+    }
+    container.querySelector('#btnAddRisk').addEventListener('click', ()=> openForm(company));
+    container.querySelector('#btnExportAllRisk').addEventListener('click', ()=>{
+      if(window.ExportEngine && window.ExportEngine.pickFormat){
+        window.ExportEngine.pickFormat(
+          ()=> window.ExportEngine.exportRiskRecap(risks, company),
+          ()=> window.ExportEngine.exportRiskRecapWord(risks, company)
+        );
+      } else {
+        AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error');
+      }
+    });
+    container.querySelectorAll('.btn-preview-all').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateRiskRecapPdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error');
+          return;
+        }
+        const type = btn.dataset.type;
+        if(type==='risk-recap'){
+          AppCore.openPreviewModal({
+            title: 'Rekapitulasi Manajemen Risiko K3',
+            generateFn: ()=> window.ExportEngine._generateRiskRecapPdf(risks, company),
+            onDownload: ()=> window.ExportEngine.exportRiskRecap(risks, company)
+          });
+        }
+      });
+    });
+  }
+
+  function statGrid(risks){
+    const total = risks.length, extreme = risks.filter(r=>riskLevel(r.initialScore).label==='Ekstrem').length, high = risks.filter(r=>riskLevel(r.initialScore).label==='Tinggi').length, controlled = risks.filter(r=> r.residualScore && r.residualScore < r.initialScore).length;
+    return '<div class="stat-grid"><div class="stat-card tone-navy"><div class="stat-label">Total Risiko Teridentifikasi</div><div class="stat-value">' + total + '</div><div class="stat-foot">Seluruh catatan HIRADC</div></div><div class="stat-card tone-red"><div class="stat-label">Risiko Ekstrem</div><div class="stat-value">' + extreme + '</div><div class="stat-foot">Memerlukan pengendalian segera</div></div><div class="stat-card tone-yellow"><div class="stat-label">Risiko Tinggi</div><div class="stat-value">' + high + '</div><div class="stat-foot">Prioritas tindak lanjut</div></div><div class="stat-card tone-green"><div class="stat-label">Sudah Dikendalikan</div><div class="stat-value">' + controlled + '</div><div class="stat-foot">Skor residual menurun dari awal</div></div></div>';
+  }
+
+  function renderTable(list){
+    const wrap = document.getElementById('riskTableWrap'); if(!wrap) return;
+    if(list.length===0){ wrap.innerHTML = '<div class="empty-state"><svg width="52" height="52" viewBox="0 0 24 24" fill="none"><path d="M12 2 22 20H2L12 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h4>Belum Ada Data Risiko</h4><p>Mulai dengan mengidentifikasi bahaya di area kerja untuk membangun HIRADC perusahaan Anda.</p></div>'; return; }
+    wrap.innerHTML = '<table class="data-table"><thead><tr><th>Area / Aktivitas</th><th>Bahaya</th><th>Jenis</th><th>Risiko Awal</th><th>Pengendalian Utama</th><th>Risiko Residual</th><th>PIC Komunikasi</th><th>Status Monitoring</th><th></th></tr></thead><tbody>' + list.map(r=>rowHtml(r)).join('') + '</tbody></table>';
+    list.forEach(r=>{
+      const viewBtn = wrap.querySelector('[data-view="' + r.id + '"]');
+      const editBtn = wrap.querySelector('[data-edit="' + r.id + '"]');
+      const previewBtn = wrap.querySelector('[data-preview="' + r.id + '"]');
+      const pdfBtn = wrap.querySelector('[data-pdf="' + r.id + '"]');
+      const delBtn = wrap.querySelector('[data-del="' + r.id + '"]');
+
+      if(viewBtn) viewBtn.addEventListener('click', ()=> openDetail(r));
+      if(editBtn) editBtn.addEventListener('click', ()=> openForm(company, r));
+      if(previewBtn) previewBtn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateRiskSinglePdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+        }
+        AppCore.openPreviewModal({
+          title: 'Laporan Risiko - ' + r.area,
+          generateFn: ()=> window.ExportEngine._generateRiskSinglePdf(r, AppCore.requireActiveCompany()),
+          onDownload: ()=> window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportRiskSingle(r, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportRiskSingleWord(r, AppCore.requireActiveCompany())
+          )
+        });
+      });
+      if(pdfBtn) pdfBtn.addEventListener('click', ()=>{
+        if(window.ExportEngine && window.ExportEngine.pickFormat){
+          window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportRiskSingle(r, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportRiskSingleWord(r, AppCore.requireActiveCompany())
+          );
+        }
+      });
+      if(delBtn) delBtn.addEventListener('click', ()=> deleteRisk(r));
+    });
+  }
+
+  function rowHtml(r){
+    const initLevel = riskLevel(r.initialScore), resLevel = r.residualScore ? riskLevel(r.residualScore) : null;
+    const mainControl = HOC_LEVELS.find(h=> r.controls && r.controls[h.key] && r.controls[h.key].trim());
+    return '<tr><td><div class="cell-strong">' + AppCore.escapeHtml(r.area) + '</div><div class="cell-mono">' + AppCore.escapeHtml(r.activity) + '</div></td><td style="max-width:220px;">' + AppCore.escapeHtml(r.hazardDesc) + '</td><td><span class="badge badge-navy">' + r.hazardType + '</span></td><td><span class="badge ' + initLevel.badge + '"><span class="badge-dot"></span>' + initLevel.label + ' (' + r.initialScore + ')</span></td><td>' + (mainControl ? '<span class="badge badge-gray">' + mainControl.label + '</span>' : '<span style="color:var(--ink-300)">&mdash;</span>') + '</td><td>' + (resLevel ? '<span class="badge ' + resLevel.badge + '"><span class="badge-dot"></span>' + resLevel.label + ' (' + r.residualScore + ')</span>' : '<span style="color:var(--ink-300)">Belum dinilai</span>') + '</td><td>' + AppCore.escapeHtml(r.commPic||'-') + '</td><td><span class="badge ' + (r.monitoringStatus==='Selesai'?'badge-green':r.monitoringStatus==='Berjalan'?'badge-yellow':'badge-gray') + '">' + (r.monitoringStatus||'Belum Mulai') + '</span></td><td><div class="row-actions"><button class="icon-btn" data-view="' + r.id + '" title="Lihat Detail"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-edit="' + r.id + '" title="Ubah"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="icon-btn" data-preview="' + r.id + '" title="Preview Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-pdf="' + r.id + '" title="Unduh Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="icon-btn danger" data-del="' + r.id + '" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td></tr>';
+  }
+
+  function deleteRisk(r){
+    AppCore.openConfirm({ title:'Hapus Catatan Risiko', message:'Catatan risiko <strong>' + AppCore.escapeHtml(r.hazardDesc) + '</strong> akan dihapus permanen dari sistem.', confirmLabel:'Hapus', tone:'danger',
+      onConfirm:()=>{ DB.saveRisks(DB.getRisks().filter(x=>x.id!==r.id)); AppCore.toast('Data risiko berhasil dihapus', 'success'); AppCore.refreshCurrentPage(); }
+    });
+  }
+
+  function openDetail(r){
+    const initLevel = riskLevel(r.initialScore), resLevel = r.residualScore ? riskLevel(r.residualScore) : null;
+    const controlsHtml = HOC_LEVELS.map(h=>{ const val = r.controls ? r.controls[h.key] : ''; if(!val || !val.trim()) return ''; return '<div style="margin-bottom:10px;"><strong style="font-size:12.5px; color:var(--navy-800);">' + h.label + '</strong><div style="font-size:13px; color:var(--ink-700); margin-top:2px;">' + AppCore.escapeHtml(val) + '</div></div>'; }).join('') || '<p style="color:var(--ink-500); font-size:13px;">Belum ada pengendalian dicatat.</p>';
+    AppCore.openModal({
+      title: r.hazardDesc, subtitle: r.area + ' &bull; ' + r.activity, wide:true,
+      bodyHtml: '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Identifikasi Bahaya</div><dl class="kv-list"><dt>Jenis Bahaya</dt><dd><span class="badge badge-navy">' + r.hazardType + '</span></dd><dt>Sumber Bahaya</dt><dd>' + AppCore.escapeHtml(r.hazardSource||'-') + '</dd><dt>Potensi Dampak</dt><dd>' + AppCore.escapeHtml(r.potentialImpact||'-') + '</dd><dt>Pekerja Terpapar</dt><dd>' + AppCore.escapeHtml(r.exposedWorkers||'-') + '</dd></dl></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Kajian Risiko</div><div style="display:flex; gap:24px; flex-wrap:wrap;"><div class="risk-score-display ' + initLevel.cls + '" style="color:#fff;"><div><div style="font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">Risiko Awal</div><div style="font-family:var(--font-display); font-size:22px; font-weight:800;">' + initLevel.label + ' &mdash; Skor ' + r.initialScore + '</div></div></div>' + (resLevel?'<div class="risk-score-display ' + resLevel.cls + '" style="color:#fff;"><div><div style="font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">Risiko Residual</div><div style="font-family:var(--font-display); font-size:22px; font-weight:800;">' + resLevel.label + ' &mdash; Skor ' + r.residualScore + '</div></div></div>':'') + '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Pengendalian Risiko (Hierarchy of Control)</div>' + controlsHtml + '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">4</span>Komunikasi Risiko</div><dl class="kv-list"><dt>Metode Komunikasi</dt><dd>' + AppCore.escapeHtml(r.commMethod||'-') + '</dd><dt>Penanggung Jawab</dt><dd>' + AppCore.escapeHtml(r.commPic||'-') + '</dd><dt>Sasaran/Pihak Terkait</dt><dd>' + AppCore.escapeHtml(r.commAudience||'-') + '</dd><dt>Tanggal Komunikasi</dt><dd>' + AppCore.fmtDate(r.commDate) + '</dd></dl></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">5</span>Monitoring Kinerja</div><dl class="kv-list"><dt>Status</dt><dd><span class="badge ' + (r.monitoringStatus==='Selesai'?'badge-green':r.monitoringStatus==='Berjalan'?'badge-yellow':'badge-gray') + '">' + (r.monitoringStatus||'Belum Mulai') + '</span></dd><dt>Indikator Kinerja</dt><dd>' + AppCore.escapeHtml(r.monitoringKpi||'-') + '</dd><dt>Tanggal Review</dt><dd>' + AppCore.fmtDate(r.monitoringDate) + '</dd><dt>Catatan Review</dt><dd>' + AppCore.escapeHtml(r.monitoringNotes||'-') + '</dd></dl></div>',
+      footHtml: '<button class="btn btn-outline" id="closeDetailBtn">Tutup</button><button class="btn btn-secondary" id="previewDetailBtn">Preview Laporan</button><button class="btn btn-primary" id="pdfDetailBtn">Unduh Laporan</button>',
+      onMount:()=>{
+        document.getElementById('closeDetailBtn').addEventListener('click', ()=> AppCore.closeModal());
+        document.getElementById('pdfDetailBtn').addEventListener('click', ()=>{
+          if(window.ExportEngine && window.ExportEngine.pickFormat){
+            window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportRiskSingle(r, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportRiskSingleWord(r, AppCore.requireActiveCompany())
+            );
+          }
+        });
+        document.getElementById('previewDetailBtn').addEventListener('click', ()=>{
+          if(!window.ExportEngine || !window.ExportEngine._generateRiskSinglePdf){
+            AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+          }
+          AppCore.openPreviewModal({
+            title: 'Laporan Risiko - ' + r.area,
+            generateFn: ()=> window.ExportEngine._generateRiskSinglePdf(r, AppCore.requireActiveCompany()),
+            onDownload: ()=> window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportRiskSingle(r, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportRiskSingleWord(r, AppCore.requireActiveCompany())
+            )
+          });
+        });
+      }
+    });
+  }
+
+  function openForm(company, existing){
+    if(!company){ AppCore.toast('Aktifkan perusahaan terlebih dahulu di menu Profil Perusahaan', 'error'); return; }
+    const isEdit = !!existing;
+    const d = existing || { area:'', activity:'', hazardType:'Fisik', hazardDesc:'', hazardSource:'', potentialImpact:'', exposedWorkers:'', likelihood:3, severity:3, controls:{}, residualLikelihood:'', residualSeverity:'', commMethod:'', commPic:'', commAudience:'', commDate:'', monitoringStatus:'Belum Mulai', monitoringKpi:'', monitoringDate:'', monitoringNotes:'' };
+    AppCore.openModal({
+      title: isEdit ? 'Ubah Data Risiko' : 'Identifikasi & Kajian Risiko Baru', subtitle: company.name, wide:true,
+      bodyHtml: '<form id="riskForm">' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Identifikasi Bahaya</div><div class="form-grid">' +
+          '<div class="form-group"><label>Area / Lokasi Kerja</label><input class="form-control" id="r_area" value="' + AppCore.escapeHtml(d.area) + '" placeholder="cth. Area Produksi Lini 2" required></div>' +
+          '<div class="form-group"><label>Aktivitas / Pekerjaan</label><input class="form-control" id="r_activity" value="' + AppCore.escapeHtml(d.activity) + '" placeholder="cth. Pengoperasian mesin press" required></div>' +
+          '<div class="form-group"><label>Jenis Bahaya</label><select class="form-control" id="r_hazardType">' + HAZARD_TYPES.map(h=>'<option ' + (d.hazardType===h?'selected':'') + '>' + h + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Sumber Bahaya</label><input class="form-control" id="r_hazardSource" value="' + AppCore.escapeHtml(d.hazardSource) + '" placeholder="cth. Bagian bergerak tanpa pengaman"></div>' +
+          '<div class="form-group span-2"><label>Deskripsi Bahaya</label><textarea class="form-control" id="r_hazardDesc" rows="2" placeholder="Uraikan potensi bahaya secara spesifik" required>' + AppCore.escapeHtml(d.hazardDesc) + '</textarea></div>' +
+          '<div class="form-group span-2"><label>Potensi Dampak</label><textarea class="form-control" id="r_potentialImpact" rows="2" placeholder="cth. Cedera tangan, terjepit, fraktur">' + AppCore.escapeHtml(d.potentialImpact) + '</textarea></div>' +
+          '<div class="form-group span-2"><label>Pekerja Terpapar</label><input class="form-control" id="r_exposedWorkers" value="' + AppCore.escapeHtml(d.exposedWorkers) + '" placeholder="cth. Operator mesin (8 orang/shift)"></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Kajian Risiko &mdash; Matriks 5&times;5 (Risiko Awal)</div><div class="form-grid">' +
+          '<div class="form-group"><label>Kemungkinan (Likelihood)</label><select class="form-control" id="r_likelihood">' + LIKELIHOOD.map(l=>'<option value="' + l.v + '" ' + (d.likelihood==l.v?'selected':'') + '>' + l.v + ' &mdash; ' + l.label + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Keparahan (Severity)</label><select class="form-control" id="r_severity">' + SEVERITY.map(s=>'<option value="' + s.v + '" ' + (d.severity==s.v?'selected':'') + '>' + s.v + ' &mdash; ' + s.label + '</option>').join('') + '</select></div>' +
+        '</div><div id="initialScoreDisplay" style="margin-top:14px;"></div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Pengendalian Risiko (Hierarchy of Control)</div><p style="font-size:12px; color:var(--ink-500); margin-bottom:12px;">Urutan dari yang paling efektif ke paling tidak efektif. Isi minimal satu tingkat yang diterapkan.</p>' +
+          HOC_LEVELS.map((h,i)=>'<div class="form-group" style="margin-bottom:12px;"><label>' + (i+1) + '. ' + h.label + ' <span class="hint">&mdash; ' + h.desc + '</span></label><textarea class="form-control" rows="2" id="r_hoc_' + h.key + '" placeholder="Tindakan pengendalian yang diterapkan...">' + AppCore.escapeHtml((d.controls&&d.controls[h.key])||'') + '</textarea></div>').join('') +
+          '<div class="form-grid" style="margin-top:6px;">' +
+            '<div class="form-group"><label>Kemungkinan Residual <span class="hint">(setelah kendali)</span></label><select class="form-control" id="r_resLikelihood"><option value="">&mdash; Belum dinilai &mdash;</option>' + LIKELIHOOD.map(l=>'<option value="' + l.v + '" ' + (d.residualLikelihood==l.v?'selected':'') + '>' + l.v + ' &mdash; ' + l.label + '</option>').join('') + '</select></div>' +
+            '<div class="form-group"><label>Keparahan Residual <span class="hint">(setelah kendali)</span></label><select class="form-control" id="r_resSeverity"><option value="">&mdash; Belum dinilai &mdash;</option>' + SEVERITY.map(s=>'<option value="' + s.v + '" ' + (d.residualSeverity==s.v?'selected':'') + '>' + s.v + ' &mdash; ' + s.label + '</option>').join('') + '</select></div>' +
+          '</div><div id="residualScoreDisplay" style="margin-top:14px;"></div>' +
+        '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">4</span>Komunikasi Risiko</div><div class="form-grid">' +
+          '<div class="form-group"><label>Metode Komunikasi</label><select class="form-control" id="r_commMethod"><option value="">Pilih metode</option>' + ['Toolbox Meeting','Safety Briefing','Papan Pengumuman/Rambu','Pelatihan/Training','Memo Internal','Rapat P2K3'].map(m=>'<option ' + (d.commMethod===m?'selected':'') + '>' + m + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Penanggung Jawab</label><input class="form-control" id="r_commPic" value="' + AppCore.escapeHtml(d.commPic) + '" placeholder="Nama PIC komunikasi"></div>' +
+          '<div class="form-group"><label>Sasaran / Pihak Terkait</label><input class="form-control" id="r_commAudience" value="' + AppCore.escapeHtml(d.commAudience) + '" placeholder="cth. Operator & Supervisor Lini 2"></div>' +
+          '<div class="form-group"><label>Tanggal Komunikasi</label><input type="date" class="form-control" id="r_commDate" value="' + (d.commDate||'') + '"></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">5</span>Monitoring Kinerja</div><div class="form-grid">' +
+          '<div class="form-group"><label>Status Tindak Lanjut</label><select class="form-control" id="r_monStatus">' + ['Belum Mulai','Berjalan','Selesai'].map(s=>'<option ' + (d.monitoringStatus===s?'selected':'') + '>' + s + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Tanggal Review</label><input type="date" class="form-control" id="r_monDate" value="' + (d.monitoringDate||'') + '"></div>' +
+          '<div class="form-group span-2"><label>Indikator Kinerja (KPI)</label><input class="form-control" id="r_monKpi" value="' + AppCore.escapeHtml(d.monitoringKpi) + '" placeholder="cth. Zero incident di area ini selama 90 hari"></div>' +
+          '<div class="form-group span-2"><label>Catatan Review</label><textarea class="form-control" id="r_monNotes" rows="2" placeholder="Catatan hasil monitoring berkala">' + AppCore.escapeHtml(d.monitoringNotes) + '</textarea></div>' +
+        '</div></div>' +
+      '</form>',
+      footHtml: '<button class="btn btn-outline" id="cancelRiskBtn">Batal</button><button class="btn btn-primary" id="saveRiskBtn">' + (isEdit?'Simpan Perubahan':'Simpan Data Risiko') + '</button>',
+      onMount:(modalEl)=>{
+        function updateScoreDisplays(){
+          const l = +modalEl.querySelector('#r_likelihood').value, s = +modalEl.querySelector('#r_severity').value, score = l*s, lvl = riskLevel(score);
+          modalEl.querySelector('#initialScoreDisplay').innerHTML = '<div class="risk-score-display ' + lvl.cls + '" style="color:#fff;"><div style="font-family:var(--font-display); font-size:28px; font-weight:800;">' + score + '</div><div><div style="font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">Tingkat Risiko Awal</div><div style="font-weight:700;">' + lvl.label + ' (' + l + ' &times; ' + s + ')</div></div></div>';
+          const rl = modalEl.querySelector('#r_resLikelihood').value, rs = modalEl.querySelector('#r_resSeverity').value, resBox = modalEl.querySelector('#residualScoreDisplay');
+          if(rl && rs){ const rscore = (+rl)*(+rs), rlvl = riskLevel(rscore); resBox.innerHTML = '<div class="risk-score-display ' + rlvl.cls + '" style="color:#fff;"><div style="font-family:var(--font-display); font-size:28px; font-weight:800;">' + rscore + '</div><div><div style="font-size:10.5px; opacity:.85; text-transform:uppercase; letter-spacing:.05em;">Tingkat Risiko Residual</div><div style="font-weight:700;">' + rlvl.label + ' (' + rl + ' &times; ' + rs + ')</div></div></div>'; }
+          else { resBox.innerHTML = '<p style="font-size:12px; color:var(--ink-500);">Isi kemungkinan & keparahan residual untuk melihat skor setelah pengendalian.</p>'; }
+        }
+        ['#r_likelihood','#r_severity','#r_resLikelihood','#r_resSeverity'].forEach(sel=> modalEl.querySelector(sel).addEventListener('change', updateScoreDisplays));
+        updateScoreDisplays();
+        modalEl.querySelector('#cancelRiskBtn').addEventListener('click', ()=> AppCore.closeModal());
+        modalEl.querySelector('#saveRiskBtn').addEventListener('click', ()=>{
+          const area = modalEl.querySelector('#r_area').value.trim(), activity = modalEl.querySelector('#r_activity').value.trim(), hazardDesc = modalEl.querySelector('#r_hazardDesc').value.trim();
+          if(!area || !activity || !hazardDesc){ AppCore.toast('Area, aktivitas, dan deskripsi bahaya wajib diisi', 'error'); return; }
+          const likelihood = +modalEl.querySelector('#r_likelihood').value, severity = +modalEl.querySelector('#r_severity').value, resL = modalEl.querySelector('#r_resLikelihood').value, resS = modalEl.querySelector('#r_resSeverity').value;
+          const controls = {}; HOC_LEVELS.forEach(h=> controls[h.key] = modalEl.querySelector('#r_hoc_' + h.key).value.trim());
+          const payload = { companyId: company.id, area, activity, hazardType: modalEl.querySelector('#r_hazardType').value, hazardDesc, hazardSource: modalEl.querySelector('#r_hazardSource').value.trim(), potentialImpact: modalEl.querySelector('#r_potentialImpact').value.trim(), exposedWorkers: modalEl.querySelector('#r_exposedWorkers').value.trim(), likelihood, severity, initialScore: likelihood*severity, controls, residualLikelihood: resL, residualSeverity: resS, residualScore: (resL && resS) ? (+resL)*(+resS) : null, commMethod: modalEl.querySelector('#r_commMethod').value, commPic: modalEl.querySelector('#r_commPic').value.trim(), commAudience: modalEl.querySelector('#r_commAudience').value.trim(), commDate: modalEl.querySelector('#r_commDate').value, monitoringStatus: modalEl.querySelector('#r_monStatus').value, monitoringKpi: modalEl.querySelector('#r_monKpi').value.trim(), monitoringDate: modalEl.querySelector('#r_monDate').value, monitoringNotes: modalEl.querySelector('#r_monNotes').value.trim(), updatedAt: new Date().toISOString() };
+          const risks = DB.getRisks();
+          if(isEdit){ const idx = risks.findIndex(x=>x.id===existing.id); risks[idx] = Object.assign({}, risks[idx], payload); }
+          else { risks.push(Object.assign({ id:DB.genId('risk'), createdAt:new Date().toISOString() }, payload)); }
+          DB.saveRisks(risks); AppCore.closeModal(); AppCore.toast(isEdit?'Data risiko berhasil diperbarui':'Data risiko berhasil disimpan', 'success'); AppCore.refreshCurrentPage();
+        });
+      }
+    });
+  }
+  return { render, riskLevel, LIKELIHOOD, SEVERITY, HOC_LEVELS };
+})();
+</script>
+
+<script>
+/* ============================================================
+   MODUL: INSPEKSI K3 LAPANGAN
+   ============================================================ */
+const InspeksiPage = (function(){
+  const CATEGORIES = ['Alat Pelindung Diri (APD)','Peralatan & Mesin Kerja','Lingkungan Kerja','Instalasi Listrik','Penanganan Bahan Kimia/B3','Housekeeping (5R)','Sistem Proteksi Kebakaran','Rambu & Tanda Bahaya','Ergonomi Kerja','Prosedur Kerja Aman (SOP/JSA)'];
+  const FINDING_TYPES = ['Kondisi Tidak Aman (Unsafe Condition)','Tindakan Tidak Aman (Unsafe Act)'];
+  const RISK_RATING = [{v:'Rendah', cls:'badge-green'},{v:'Sedang', cls:'badge-yellow'},{v:'Tinggi', cls:'badge-amber'},{v:'Kritis', cls:'badge-red'}];
+  const STATUS_LIST = ['Terbuka','Dalam Proses','Selesai','Ditunda'];
+
+  function render(container){
+    const company = AppCore.requireActiveCompany();
+    const list = DB.getInspections().filter(i=> !company || i.companyId===company.id);
+    container.innerHTML = '<div class="page-head">' +
+      '<div>' +
+        '<div class="page-head-eyebrow">Pemeriksaan Lapangan</div>' +
+        '<h2>Inspeksi K3</h2>' +
+        '<p class="page-head-desc">Catat hasil inspeksi rutin/berkala di lapangan: kondisi tidak aman, tindakan tidak aman, dan rekomendasi tindak lanjut.</p>' +
+      '</div>' +
+      '<div class="page-head-actions">' +
+        '<button class="btn btn-outline btn-preview-all" ' + (list.length===0?'disabled':'') + ' data-type="insp-recap" title="Preview Rekap Laporan">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+          'Preview Rekap' +
+        '</button>' +
+        '<button class="btn btn-outline" id="btnExportAllInsp" ' + (list.length===0?'disabled':'') + '>' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          'Unduh Rekap Laporan' +
+        '</button>' +
+        '<button class="btn btn-primary" id="btnAddInspeksi" ' + (!company?'disabled':'') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' +
+          'Inspeksi Baru' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+    statGrid(list) +
+    '<div class="filter-bar">' +
+      '<div class="search-input">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+        '<input type="text" id="inspSearch" placeholder="Cari area, inspektor...">' +
+      '</div>' +
+      '<select class="select-filter" id="inspStatusFilter">' +
+        '<option value="">Semua Status</option>' + STATUS_LIST.map(s=>'<option>' + s + '</option>').join('') +
+      '</select>' +
+    '</div>' +
+    '<div class="card"><div class="table-wrap" id="inspTableWrap"></div></div>';
+
+    renderTable(list);
+    container.querySelector('#inspSearch').addEventListener('input', applyFilters);
+    container.querySelector('#inspStatusFilter').addEventListener('change', applyFilters);
+    function applyFilters(){
+      const q = container.querySelector('#inspSearch').value.toLowerCase(), st = container.querySelector('#inspStatusFilter').value;
+      const filtered = list.filter(i=>{ const matchQ = !q || (i.area+i.inspector).toLowerCase().includes(q); const matchS = !st || overallStatus(i)===st; return matchQ && matchS; });
+      renderTable(filtered);
+    }
+    container.querySelector('#btnAddInspeksi').addEventListener('click', ()=> openForm(company));
+    container.querySelector('#btnExportAllInsp').addEventListener('click', ()=>{
+      if(window.ExportEngine && window.ExportEngine.pickFormat){
+        window.ExportEngine.pickFormat(
+          ()=> window.ExportEngine.exportInspectionRecap(list, company),
+          ()=> window.ExportEngine.exportInspectionRecapWord(list, company)
+        );
+      } else {
+        AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error');
+      }
+    });
+    container.querySelectorAll('.btn-preview-all').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateInspectionRecapPdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+        }
+        const type = btn.dataset.type;
+        if(type==='insp-recap'){
+          AppCore.openPreviewModal({
+            title: 'Rekapitulasi Inspeksi K3',
+            generateFn: ()=> window.ExportEngine._generateInspectionRecapPdf(list, company),
+            onDownload: ()=> window.ExportEngine.exportInspectionRecap(list, company)
+          });
+        }
+      });
+    });
+  }
+
+  function overallStatus(insp){
+    const findings = insp.findings || [];
+    if(findings.length===0) return 'Selesai';
+    if(findings.every(f=>f.status==='Selesai')) return 'Selesai';
+    if(findings.some(f=>f.status==='Dalam Proses')) return 'Dalam Proses';
+    if(findings.every(f=>f.status==='Ditunda')) return 'Ditunda';
+    return 'Terbuka';
+  }
+  function statGrid(list){
+    const totalFindings = list.reduce((a,i)=> a + (i.findings?.length||0), 0);
+    const critical = list.reduce((a,i)=> a + (i.findings?.filter(f=>f.riskRating==='Kritis').length||0), 0);
+    const open = list.reduce((a,i)=> a + (i.findings?.filter(f=>f.status==='Terbuka').length||0), 0);
+    const closed = list.reduce((a,i)=> a + (i.findings?.filter(f=>f.status==='Selesai').length||0), 0);
+    return '<div class="stat-grid"><div class="stat-card tone-navy"><div class="stat-label">Total Sesi Inspeksi</div><div class="stat-value">' + list.length + '</div><div class="stat-foot">' + totalFindings + ' total temuan tercatat</div></div><div class="stat-card tone-red"><div class="stat-label">Temuan Kritis</div><div class="stat-value">' + critical + '</div><div class="stat-foot">Risiko kritis perlu eskalasi</div></div><div class="stat-card tone-yellow"><div class="stat-label">Temuan Terbuka</div><div class="stat-value">' + open + '</div><div class="stat-foot">Menunggu tindak lanjut</div></div><div class="stat-card tone-green"><div class="stat-label">Temuan Selesai</div><div class="stat-value">' + closed + '</div><div class="stat-foot">Telah ditutup / closed-out</div></div></div>';
+  }
+  function renderTable(list){
+    const wrap = document.getElementById('inspTableWrap'); if(!wrap) return;
+    if(list.length===0){ wrap.innerHTML = '<div class="empty-state"><svg width="52" height="52" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h4>Belum Ada Catatan Inspeksi</h4><p>Lakukan inspeksi K3 lapangan pertama untuk mulai mendokumentasikan temuan.</p></div>'; return; }
+    wrap.innerHTML = '<table class="data-table"><thead><tr><th>Tanggal</th><th>Area Inspeksi</th><th>Inspektor</th><th>Kategori</th><th>Jml Temuan</th><th>Risiko Tertinggi</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(rowHtml).join('') + '</tbody></table>';
+    list.forEach(i=>{
+      const viewBtn = wrap.querySelector('[data-view="' + i.id + '"]');
+      const editBtn = wrap.querySelector('[data-edit="' + i.id + '"]');
+      const previewBtn = wrap.querySelector('[data-preview="' + i.id + '"]');
+      const pdfBtn = wrap.querySelector('[data-pdf="' + i.id + '"]');
+      const delBtn = wrap.querySelector('[data-del="' + i.id + '"]');
+
+      if(viewBtn) viewBtn.addEventListener('click', ()=> openDetail(i));
+      if(editBtn) editBtn.addEventListener('click', ()=> openForm(company, i));
+      if(previewBtn) previewBtn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateInspectionSinglePdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+        }
+        AppCore.openPreviewModal({
+          title: 'Laporan Inspeksi - ' + i.area,
+          generateFn: ()=> window.ExportEngine._generateInspectionSinglePdf(i, AppCore.requireActiveCompany()),
+          onDownload: ()=> window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportInspectionSingle(i, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportInspectionSingleWord(i, AppCore.requireActiveCompany())
+          )
+        });
+      });
+      if(pdfBtn) pdfBtn.addEventListener('click', ()=>{
+        if(window.ExportEngine && window.ExportEngine.pickFormat){
+          window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportInspectionSingle(i, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportInspectionSingleWord(i, AppCore.requireActiveCompany())
+          );
+        }
+      });
+      if(delBtn) delBtn.addEventListener('click', ()=> deleteInspeksi(i));
+    });
+  }
+  function highestRisk(findings){ const order = ['Kritis','Tinggi','Sedang','Rendah']; for(const o of order){ if(findings?.some(f=>f.riskRating===o)) return o; } return null; }
+  function rowHtml(i){
+    const st = overallStatus(i), hr = highestRisk(i.findings), hrMeta = RISK_RATING.find(r=>r.v===hr);
+    return '<tr><td class="cell-mono">' + AppCore.fmtDate(i.date) + '</td><td><div class="cell-strong">' + AppCore.escapeHtml(i.area) + '</div><div class="cell-mono">' + (i.shift||'') + '</div></td><td>' + AppCore.escapeHtml(i.inspector) + '</td><td>' + (i.categories||[]).slice(0,2).map(c=>'<span class="badge badge-gray" style="margin:2px;">' + c + '</span>').join('') + ((i.categories||[]).length>2?'<span class="badge badge-gray">+' + (i.categories.length-2) + '</span>':'') + '</td><td><span class="cell-strong">' + (i.findings?.length||0) + '</span></td><td>' + (hrMeta ? '<span class="badge ' + hrMeta.cls + '"><span class="badge-dot"></span>' + hr + '</span>' : '<span style="color:var(--ink-300)">Tidak ada</span>') + '</td><td><span class="badge ' + (st==='Selesai'?'badge-green':st==='Dalam Proses'?'badge-yellow':st==='Ditunda'?'badge-gray':'badge-red') + '">' + st + '</span></td><td><div class="row-actions"><button class="icon-btn" data-view="' + i.id + '" title="Detail"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-edit="' + i.id + '" title="Ubah"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="icon-btn" data-preview="' + i.id + '" title="Preview Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-pdf="' + i.id + '" title="Unduh Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="icon-btn danger" data-del="' + i.id + '" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td></tr>';
+  }
+  function deleteInspeksi(i){
+    AppCore.openConfirm({ title:'Hapus Catatan Inspeksi', message:'Inspeksi area <strong>' + AppCore.escapeHtml(i.area) + '</strong> tanggal ' + AppCore.fmtDate(i.date) + ' akan dihapus permanen.', confirmLabel:'Hapus', tone:'danger',
+      onConfirm:()=>{ DB.saveInspections(DB.getInspections().filter(x=>x.id!==i.id)); AppCore.toast('Catatan inspeksi berhasil dihapus', 'success'); AppCore.refreshCurrentPage(); }
+    });
+  }
+
+  function openDetail(i){
+    const findingsHtml = (i.findings||[]).map((f,idx)=>{
+      const rr = RISK_RATING.find(r=>r.v===f.riskRating);
+      return '<div class="card" style="margin-bottom:12px;"><div class="card-pad"><div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;"><div style="font-weight:700; font-size:13.5px;">Temuan #' + (idx+1) + ' &mdash; ' + f.type + '</div><span class="badge ' + (rr?rr.cls:'badge-gray') + '">' + f.riskRating + '</span></div><dl class="kv-list"><dt>Lokasi Spesifik</dt><dd>' + AppCore.escapeHtml(f.location||'-') + '</dd><dt>Deskripsi Temuan</dt><dd>' + AppCore.escapeHtml(f.description) + '</dd><dt>Rekomendasi</dt><dd>' + AppCore.escapeHtml(f.recommendation||'-') + '</dd><dt>PIC Tindak Lanjut</dt><dd>' + AppCore.escapeHtml(f.pic||'-') + '</dd><dt>Target Selesai</dt><dd>' + AppCore.fmtDate(f.dueDate) + '</dd><dt>Status</dt><dd><span class="badge ' + (f.status==='Selesai'?'badge-green':f.status==='Dalam Proses'?'badge-yellow':f.status==='Ditunda'?'badge-gray':'badge-red') + '">' + f.status + '</span></dd></dl></div></div>';
+    }).join('') || '<p style="color:var(--ink-500); font-size:13px;">Tidak ada temuan pada inspeksi ini (kondisi area baik).</p>';
+    AppCore.openModal({
+      title: 'Inspeksi K3 &mdash; ' + i.area, subtitle: AppCore.fmtDate(i.date) + ' &bull; Inspektor: ' + i.inspector, wide:true,
+      bodyHtml: '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Data Umum Inspeksi</div><dl class="kv-list"><dt>Area / Lokasi</dt><dd>' + AppCore.escapeHtml(i.area) + '</dd><dt>Tanggal</dt><dd>' + AppCore.fmtDate(i.date) + '</dd><dt>Shift</dt><dd>' + AppCore.escapeHtml(i.shift||'-') + '</dd><dt>Inspektor</dt><dd>' + AppCore.escapeHtml(i.inspector) + '</dd><dt>Didampingi Oleh</dt><dd>' + AppCore.escapeHtml(i.accompaniedBy||'-') + '</dd><dt>Kategori Inspeksi</dt><dd>' + (i.categories||[]).join(', ')||'-' + '</dd></dl></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Daftar Temuan</div>' + findingsHtml + '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Kesimpulan</div><dl class="kv-list"><dt>Kesimpulan Umum</dt><dd>' + AppCore.escapeHtml(i.conclusion||'-') + '</dd><dt>Ditandatangani Oleh</dt><dd>' + AppCore.escapeHtml(i.signedBy||'-') + '</dd></dl></div>',
+      footHtml: '<button class="btn btn-outline" id="closeInspDetail">Tutup</button><button class="btn btn-secondary" id="previewInspDetail">Preview Laporan</button><button class="btn btn-primary" id="pdfInspDetail">Unduh Laporan</button>',
+      onMount:()=>{
+        document.getElementById('closeInspDetail').addEventListener('click', ()=> AppCore.closeModal());
+        document.getElementById('pdfInspDetail').addEventListener('click', ()=>{
+          if(window.ExportEngine && window.ExportEngine.pickFormat){
+            window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportInspectionSingle(i, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportInspectionSingleWord(i, AppCore.requireActiveCompany())
+            );
+          }
+        });
+        document.getElementById('previewInspDetail').addEventListener('click', ()=>{
+          if(!window.ExportEngine || !window.ExportEngine._generateInspectionSinglePdf){
+            AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+          }
+          AppCore.openPreviewModal({
+            title: 'Laporan Inspeksi - ' + i.area,
+            generateFn: ()=> window.ExportEngine._generateInspectionSinglePdf(i, AppCore.requireActiveCompany()),
+            onDownload: ()=> window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportInspectionSingle(i, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportInspectionSingleWord(i, AppCore.requireActiveCompany())
+            )
+          });
+        });
+      }
+    });
+  }
+
+  let findingDraft = [];
+  function openForm(company, existing){
+    if(!company){ AppCore.toast('Aktifkan perusahaan terlebih dahulu', 'error'); return; }
+    const isEdit = !!existing;
+    const d = existing || { area:'', date:new Date().toISOString().slice(0,10), shift:'Shift 1 (Pagi)', inspector:'', accompaniedBy:'', categories:[], findings:[], conclusion:'', signedBy:'' };
+    findingDraft = JSON.parse(JSON.stringify(d.findings||[]));
+    const categoryPills = CATEGORIES.map(c=>'<label class="pill-option ' + ((d.categories||[]).includes(c)?'checked':'') + '"><input type="checkbox" value="' + c + '" class="catCheck" ' + ((d.categories||[]).includes(c)?'checked':'') + '> ' + c + '</label>').join('');
+    AppCore.openModal({
+      title: isEdit ? 'Ubah Catatan Inspeksi' : 'Inspeksi K3 Lapangan Baru', subtitle: company.name, wide:true,
+      bodyHtml: '<form id="inspForm">' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Data Umum Inspeksi</div><div class="form-grid">' +
+          '<div class="form-group"><label>Area / Lokasi Inspeksi</label><input class="form-control" id="i_area" value="' + AppCore.escapeHtml(d.area) + '" placeholder="cth. Gudang Bahan Baku" required></div>' +
+          '<div class="form-group"><label>Tanggal Inspeksi</label><input type="date" class="form-control" id="i_date" value="' + d.date + '" required></div>' +
+          '<div class="form-group"><label>Shift</label><select class="form-control" id="i_shift">' + ['Shift 1 (Pagi)','Shift 2 (Siang)','Shift 3 (Malam)','Non-Shift'].map(s=>'<option ' + (d.shift===s?'selected':'') + '>' + s + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Nama Inspektor</label><input class="form-control" id="i_inspector" value="' + AppCore.escapeHtml(d.inspector) + '" placeholder="Nama petugas inspeksi" required></div>' +
+          '<div class="form-group span-2"><label>Didampingi Oleh <span class="hint">(opsional)</span></label><input class="form-control" id="i_accompaniedBy" value="' + AppCore.escapeHtml(d.accompaniedBy) + '" placeholder="cth. Supervisor area / PIC lapangan"></div>' +
+          '<div class="form-group span-2"><label>Kategori Inspeksi</label><div class="pill-group">' + categoryPills + '</div></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Daftar Temuan</div><div id="findingsListWrap"></div>' +
+          '<button type="button" class="add-row-btn" id="addFindingBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tambah Temuan</button>' +
+        '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Kesimpulan</div><div class="form-grid">' +
+          '<div class="form-group span-2"><label>Kesimpulan Umum</label><textarea class="form-control" id="i_conclusion" rows="2" placeholder="Ringkasan kondisi keseluruhan area yang diinspeksi">' + AppCore.escapeHtml(d.conclusion) + '</textarea></div>' +
+          '<div class="form-group"><label>Ditandatangani Oleh</label><input class="form-control" id="i_signedBy" value="' + AppCore.escapeHtml(d.signedBy) + '" placeholder="Nama & jabatan"></div>' +
+        '</div></div>' +
+      '</form>',
+      footHtml: '<button class="btn btn-outline" id="cancelInspBtn">Batal</button><button class="btn btn-primary" id="saveInspBtn">' + (isEdit?'Simpan Perubahan':'Simpan Inspeksi') + '</button>',
+      onMount:(modalEl)=>{
+        modalEl.querySelectorAll('.catCheck').forEach(chk=> chk.addEventListener('change', ()=> chk.closest('.pill-option').classList.toggle('checked', chk.checked)));
+        function renderFindings(){
+          const wrap = modalEl.querySelector('#findingsListWrap');
+          if(findingDraft.length===0){ wrap.innerHTML = '<p style="font-size:12.5px; color:var(--ink-500); margin-bottom:10px;">Belum ada temuan ditambahkan. Klik "Tambah Temuan" jika ditemukan kondisi/tindakan tidak aman.</p>'; return; }
+          wrap.innerHTML = findingDraft.map((f,idx)=>'<div class="card" style="margin-bottom:12px;"><div class="card-pad"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><strong style="font-size:13px;">Temuan #' + (idx+1) + '</strong><button type="button" class="icon-btn danger" data-removef="' + idx + '" title="Hapus Temuan"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>' +
+          '<div class="form-grid"><div class="form-group"><label>Jenis Temuan</label><select class="form-control" data-f="type" data-idx="' + idx + '">' + FINDING_TYPES.map(t=>'<option ' + (f.type===t?'selected':'') + '>' + t + '</option>').join('') + '</select></div><div class="form-group"><label>Tingkat Risiko</label><select class="form-control" data-f="riskRating" data-idx="' + idx + '">' + RISK_RATING.map(r=>'<option ' + (f.riskRating===r.v?'selected':'') + '>' + r.v + '</option>').join('') + '</select></div>' +
+          '<div class="form-group span-2"><label>Lokasi Spesifik</label><input class="form-control" data-f="location" data-idx="' + idx + '" value="' + AppCore.escapeHtml(f.location||'') + '" placeholder="cth. Rak penyimpanan B3, sisi utara"></div>' +
+          '<div class="form-group span-2"><label>Deskripsi Temuan</label><textarea class="form-control" rows="2" data-f="description" data-idx="' + idx + '" placeholder="Uraikan kondisi/tindakan tidak aman yang ditemukan">' + AppCore.escapeHtml(f.description||'') + '</textarea></div>' +
+          '<div class="form-group span-2"><label>Rekomendasi Tindakan</label><textarea class="form-control" rows="2" data-f="recommendation" data-idx="' + idx + '" placeholder="Tindakan perbaikan yang disarankan">' + AppCore.escapeHtml(f.recommendation||'') + '</textarea></div>' +
+          '<div class="form-group"><label>PIC Tindak Lanjut</label><input class="form-control" data-f="pic" data-idx="' + idx + '" value="' + AppCore.escapeHtml(f.pic||'') + '" placeholder="Penanggung jawab"></div>' +
+          '<div class="form-group"><label>Target Selesai</label><input type="date" class="form-control" data-f="dueDate" data-idx="' + idx + '" value="' + (f.dueDate||'') + '"></div>' +
+          '<div class="form-group"><label>Status</label><select class="form-control" data-f="status" data-idx="' + idx + '">' + STATUS_LIST.map(s=>'<option ' + (f.status===s?'selected':'') + '>' + s + '</option>').join('') + '</select></div></div></div></div>').join('');
+          wrap.querySelectorAll('[data-f]').forEach(inp=> inp.addEventListener('input', ()=>{ findingDraft[+inp.dataset.idx][inp.dataset.f] = inp.value; }));
+          wrap.querySelectorAll('[data-removef]').forEach(btn=> btn.addEventListener('click', ()=>{ findingDraft.splice(+btn.dataset.removef, 1); renderFindings(); }));
+        }
+        renderFindings();
+        modalEl.querySelector('#addFindingBtn').addEventListener('click', ()=>{ findingDraft.push({ type:FINDING_TYPES[0], riskRating:'Sedang', location:'', description:'', recommendation:'', pic:'', dueDate:'', status:'Terbuka' }); renderFindings(); });
+        modalEl.querySelector('#cancelInspBtn').addEventListener('click', ()=> AppCore.closeModal());
+        modalEl.querySelector('#saveInspBtn').addEventListener('click', ()=>{
+          const area = modalEl.querySelector('#i_area').value.trim(), inspector = modalEl.querySelector('#i_inspector').value.trim(), date = modalEl.querySelector('#i_date').value;
+          if(!area || !inspector || !date){ AppCore.toast('Area, tanggal, dan nama inspektor wajib diisi', 'error'); return; }
+          const categories = Array.from(modalEl.querySelectorAll('.catCheck:checked')).map(c=>c.value);
+          const payload = { companyId: company.id, area, date, shift: modalEl.querySelector('#i_shift').value, inspector, accompaniedBy: modalEl.querySelector('#i_accompaniedBy').value.trim(), categories, findings: findingDraft, conclusion: modalEl.querySelector('#i_conclusion').value.trim(), signedBy: modalEl.querySelector('#i_signedBy').value.trim(), updatedAt: new Date().toISOString() };
+          const list = DB.getInspections();
+          if(isEdit){ const idx = list.findIndex(x=>x.id===existing.id); list[idx] = Object.assign({}, list[idx], payload); }
+          else { list.push(Object.assign({ id:DB.genId('insp'), createdAt:new Date().toISOString() }, payload)); }
+          DB.saveInspections(list); AppCore.closeModal(); AppCore.toast(isEdit?'Inspeksi berhasil diperbarui':'Inspeksi berhasil disimpan', 'success'); AppCore.refreshCurrentPage();
+        });
+      }
+    });
+  }
+  return { render, CATEGORIES, FINDING_TYPES, RISK_RATING, STATUS_LIST, overallStatus, highestRisk };
+})();
+</script>
+
+<script>
+/* ============================================================
+   MODUL: INVESTIGASI & PELAPORAN KECELAKAAN KERJA
+   ============================================================ */
+const InvestigasiPage = (function(){
+  const INCIDENT_TYPES = ['Kecelakaan Kerja (Cedera)','Nyaris Celaka (Near Miss)','Kerusakan Properti/Aset','Kebakaran/Ledakan','Tumpahan/Pencemaran Lingkungan','Penyakit Akibat Kerja (PAK)'];
+  const SEVERITY_CLASS = [
+    {v:'Tanpa Cedera (Near Miss)', cls:'badge-gray'},{v:'P3K (First Aid)', cls:'badge-green'},{v:'Cedera Ringan - Rawat Jalan', cls:'badge-yellow'},
+    {v:'Hilang Hari Kerja (Lost Time Injury)', cls:'badge-amber'},{v:'Cacat Permanen', cls:'badge-red'},{v:'Fatal / Meninggal Dunia', cls:'badge-red'},
+  ];
+  const CAUSE_CATEGORIES = ['Faktor Manusia (Human Factor)','Faktor Peralatan/Mesin','Faktor Lingkungan Kerja','Faktor Prosedur/Sistem Kerja','Faktor Manajemen/Organisasi'];
+  const STATUS_LIST = ['Investigasi Berjalan','Menunggu Verifikasi','Ditutup'];
+
+  function render(container){
+    const company = AppCore.requireActiveCompany();
+    const list = DB.getInvestigations().filter(i=> !company || i.companyId===company.id);
+    container.innerHTML = '<div class="page-head">' +
+      '<div>' +
+        '<div class="page-head-eyebrow">Investigasi Insiden</div>' +
+        '<h2>Investigasi &amp; Pelaporan Kecelakaan Kerja</h2>' +
+        '<p class="page-head-desc">Dokumentasikan kronologi, analisis akar penyebab, dan tindakan korektif untuk mencegah kejadian berulang.</p>' +
+      '</div>' +
+      '<div class="page-head-actions">' +
+        '<button class="btn btn-outline btn-preview-all" ' + (list.length===0?'disabled':'') + ' data-type="inv-recap" title="Preview Rekap Laporan">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+          'Preview Rekap' +
+        '</button>' +
+        '<button class="btn btn-outline" id="btnExportAllInv" ' + (list.length===0?'disabled':'') + '>' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          'Unduh Rekap Laporan' +
+        '</button>' +
+        '<button class="btn btn-primary" id="btnAddInvestigasi" ' + (!company?'disabled':'') + '>' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>' +
+          'Laporkan Insiden' +
+        '</button>' +
+      '</div>' +
+    '</div>' +
+    statGrid(list) +
+    '<div class="filter-bar">' +
+      '<div class="search-input">' +
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+        '<input type="text" id="invSearch" placeholder="Cari lokasi, korban, pelapor...">' +
+      '</div>' +
+      '<select class="select-filter" id="invTypeFilter"><option value="">Semua Jenis Insiden</option>' + INCIDENT_TYPES.map(t=>'<option>' + t + '</option>').join('') + '</select>' +
+      '<select class="select-filter" id="invStatusFilter"><option value="">Semua Status</option>' + STATUS_LIST.map(s=>'<option>' + s + '</option>').join('') + '</select>' +
+    '</div>' +
+    '<div class="card"><div class="table-wrap" id="invTableWrap"></div></div>';
+
+    renderTable(list);
+    container.querySelector('#invSearch').addEventListener('input', applyFilters);
+    container.querySelector('#invTypeFilter').addEventListener('change', applyFilters);
+    container.querySelector('#invStatusFilter').addEventListener('change', applyFilters);
+    function applyFilters(){
+      const q = container.querySelector('#invSearch').value.toLowerCase(), ty = container.querySelector('#invTypeFilter').value, st = container.querySelector('#invStatusFilter').value;
+      const filtered = list.filter(i=>{ const matchQ = !q || (i.location+(i.victimName||'')+i.reporter).toLowerCase().includes(q); const matchT = !ty || i.incidentType===ty; const matchS = !st || i.status===st; return matchQ && matchT && matchS; });
+      renderTable(filtered);
+    }
+    container.querySelector('#btnAddInvestigasi').addEventListener('click', ()=> openForm(company));
+    container.querySelector('#btnExportAllInv').addEventListener('click', ()=>{
+      if(window.ExportEngine && window.ExportEngine.pickFormat){
+        window.ExportEngine.pickFormat(
+          ()=> window.ExportEngine.exportInvestigationRecap(list, company),
+          ()=> window.ExportEngine.exportInvestigationRecapWord(list, company)
+        );
+      } else {
+        AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error');
+      }
+    });
+    container.querySelectorAll('.btn-preview-all').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateInvestigationRecapPdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+        }
+        const type = btn.dataset.type;
+        if(type==='inv-recap'){
+          AppCore.openPreviewModal({
+            title: 'Rekapitulasi Investigasi Insiden',
+            generateFn: ()=> window.ExportEngine._generateInvestigationRecapPdf(list, company),
+            onDownload: ()=> window.ExportEngine.exportInvestigationRecap(list, company)
+          });
+        }
+      });
+    });
+  }
+
+  function statGrid(list){
+    const total = list.length, fatal = list.filter(i=> i.severity==='Fatal / Meninggal Dunia').length, lti = list.filter(i=> i.severity==='Hilang Hari Kerja (Lost Time Injury)').length, openInv = list.filter(i=> i.status!=='Ditutup').length;
+    return '<div class="stat-grid"><div class="stat-card tone-navy"><div class="stat-label">Total Insiden Tercatat</div><div class="stat-value">' + total + '</div><div class="stat-foot">Seluruh kategori insiden</div></div><div class="stat-card tone-red"><div class="stat-label">Insiden Fatal</div><div class="stat-value">' + fatal + '</div><div class="stat-foot">Memerlukan investigasi mendalam</div></div><div class="stat-card tone-yellow"><div class="stat-label">Lost Time Injury</div><div class="stat-value">' + lti + '</div><div class="stat-foot">Kehilangan hari kerja</div></div><div class="stat-card tone-green"><div class="stat-label">Investigasi Berjalan</div><div class="stat-value">' + openInv + '</div><div class="stat-foot">Belum ditutup / belum terverifikasi</div></div></div>';
+  }
+  function renderTable(list){
+    const wrap = document.getElementById('invTableWrap'); if(!wrap) return;
+    if(list.length===0){ wrap.innerHTML = '<div class="empty-state"><svg width="52" height="52" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.4"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h4>Belum Ada Laporan Insiden</h4><p>Catatan investigasi akan tampil di sini setelah insiden dilaporkan. Semoga selalu Zero Accident.</p></div>'; return; }
+    wrap.innerHTML = '<table class="data-table"><thead><tr><th>Tanggal/Waktu</th><th>Jenis Insiden</th><th>Lokasi</th><th>Korban</th><th>Keparahan</th><th>Pelapor</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(rowHtml).join('') + '</tbody></table>';
+    list.forEach(i=>{
+      const viewBtn = wrap.querySelector('[data-view="' + i.id + '"]');
+      const editBtn = wrap.querySelector('[data-edit="' + i.id + '"]');
+      const previewBtn = wrap.querySelector('[data-preview="' + i.id + '"]');
+      const pdfBtn = wrap.querySelector('[data-pdf="' + i.id + '"]');
+      const delBtn = wrap.querySelector('[data-del="' + i.id + '"]');
+
+      if(viewBtn) viewBtn.addEventListener('click', ()=> openDetail(i));
+      if(editBtn) editBtn.addEventListener('click', ()=> openForm(company, i));
+      if(previewBtn) previewBtn.addEventListener('click', ()=>{
+        if(!window.ExportEngine || !window.ExportEngine._generateInvestigationSinglePdf){
+          AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+        }
+        AppCore.openPreviewModal({
+          title: 'Laporan Investigasi - ' + i.location,
+          generateFn: ()=> window.ExportEngine._generateInvestigationSinglePdf(i, AppCore.requireActiveCompany()),
+          onDownload: ()=> window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportInvestigationSingle(i, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportInvestigationSingleWord(i, AppCore.requireActiveCompany())
+          )
+        });
+      });
+      if(pdfBtn) pdfBtn.addEventListener('click', ()=>{
+        if(window.ExportEngine && window.ExportEngine.pickFormat){
+          window.ExportEngine.pickFormat(
+            ()=> window.ExportEngine.exportInvestigationSingle(i, AppCore.requireActiveCompany()),
+            ()=> window.ExportEngine.exportInvestigationSingleWord(i, AppCore.requireActiveCompany())
+          );
+        }
+      });
+      if(delBtn) delBtn.addEventListener('click', ()=> deleteInvestigasi(i));
+    });
+  }
+  function rowHtml(i){
+    const sev = SEVERITY_CLASS.find(s=>s.v===i.severity);
+    return '<tr><td class="cell-mono">' + AppCore.fmtDate(i.dateTime) + '<br>' + (i.dateTime? new Date(i.dateTime).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'') + '</td><td><span class="badge badge-navy">' + i.incidentType + '</span></td><td class="cell-strong">' + AppCore.escapeHtml(i.location) + '</td><td>' + AppCore.escapeHtml(i.victimName||'-') + '</td><td>' + (sev?'<span class="badge ' + sev.cls + '"><span class="badge-dot"></span>' + i.severity + '</span>':'-') + '</td><td>' + AppCore.escapeHtml(i.reporter) + '</td><td><span class="badge ' + (i.status==='Ditutup'?'badge-green':i.status==='Menunggu Verifikasi'?'badge-yellow':'badge-red') + '">' + i.status + '</span></td><td><div class="row-actions"><button class="icon-btn" data-view="' + i.id + '" title="Detail"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-edit="' + i.id + '" title="Ubah"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M11 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button><button class="icon-btn" data-preview="' + i.id + '" title="Preview Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg></button><button class="icon-btn" data-pdf="' + i.id + '" title="Unduh Laporan"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="icon-btn danger" data-del="' + i.id + '" title="Hapus"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></td></tr>';
+  }
+  function deleteInvestigasi(i){
+    AppCore.openConfirm({ title:'Hapus Laporan Investigasi', message:'Laporan insiden di <strong>' + AppCore.escapeHtml(i.location) + '</strong> akan dihapus permanen.', confirmLabel:'Hapus', tone:'danger',
+      onConfirm:()=>{ DB.saveInvestigations(DB.getInvestigations().filter(x=>x.id!==i.id)); AppCore.toast('Laporan investigasi berhasil dihapus', 'success'); AppCore.refreshCurrentPage(); }
+    });
+  }
+
+  function openDetail(i){
+    const sev = SEVERITY_CLASS.find(s=>s.v===i.severity);
+    const causesHtml = (i.rootCauses||[]).map((c,idx)=>'<div style="margin-bottom:10px; padding:10px 12px; background:var(--bg-subtle); border-radius:8px;"><strong style="font-size:12px; color:var(--navy-800);">' + (idx+1) + '. ' + c.category + '</strong><div style="font-size:13px; color:var(--ink-700); margin-top:3px;">' + AppCore.escapeHtml(c.description) + '</div></div>').join('') || '<p style="color:var(--ink-500); font-size:13px;">Belum ada akar penyebab dicatat.</p>';
+    const actionsHtml = (i.correctiveActions||[]).map((a,idx)=>'<tr><td class="cell-strong">' + (idx+1) + '</td><td>' + AppCore.escapeHtml(a.action) + '</td><td>' + AppCore.escapeHtml(a.pic) + '</td><td class="cell-mono">' + AppCore.fmtDate(a.dueDate) + '</td><td><span class="badge ' + (a.status==='Selesai'?'badge-green':'badge-yellow') + '">' + a.status + '</span></td></tr>').join('') || '';
+    AppCore.openModal({
+      title:'Investigasi Insiden &mdash; ' + i.location, subtitle: AppCore.fmtDateTime(i.dateTime) + ' &bull; ' + i.incidentType, wide:true,
+      bodyHtml:'<div class="form-section"><div class="form-section-title"><span class="num">1</span>Data Umum Insiden</div><dl class="kv-list"><dt>Jenis Insiden</dt><dd><span class="badge badge-navy">' + i.incidentType + '</span></dd><dt>Tanggal &amp; Waktu</dt><dd>' + AppCore.fmtDateTime(i.dateTime) + '</dd><dt>Lokasi Kejadian</dt><dd>' + AppCore.escapeHtml(i.location) + '</dd><dt>Dilaporkan Oleh</dt><dd>' + AppCore.escapeHtml(i.reporter) + '</dd><dt>Tim Investigasi</dt><dd>' + AppCore.escapeHtml(i.investigationTeam||'-') + '</dd></dl></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Data Korban &amp; Cedera</div><dl class="kv-list"><dt>Nama Korban</dt><dd>' + AppCore.escapeHtml(i.victimName||'Tidak ada korban') + '</dd><dt>Jabatan/Unit Kerja</dt><dd>' + AppCore.escapeHtml(i.victimPosition||'-') + '</dd><dt>Bagian Tubuh Cedera</dt><dd>' + AppCore.escapeHtml(i.bodyPart||'-') + '</dd><dt>Klasifikasi Keparahan</dt><dd>' + (sev?'<span class="badge ' + sev.cls + '">' + i.severity + '</span>':'-') + '</dd><dt>Estimasi Hari Kerja Hilang</dt><dd>' + (i.lostDays || '0') + ' hari</dd></dl></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Kronologi Kejadian</div><p style="font-size:13px; line-height:1.6; color:var(--ink-700);">' + AppCore.escapeHtml(i.chronology||'-') + '</p></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">4</span>Analisis Akar Penyebab</div><dl class="kv-list" style="margin-bottom:12px;"><dt>Penyebab Langsung</dt><dd>' + AppCore.escapeHtml(i.immediateCause||'-') + '</dd></dl>' + causesHtml + '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">5</span>Tindakan Korektif &amp; Pencegahan</div>' + (actionsHtml ? '<div class="table-wrap"><table class="data-table"><thead><tr><th>No</th><th>Tindakan</th><th>PIC</th><th>Target</th><th>Status</th></tr></thead><tbody>' + actionsHtml + '</tbody></table></div>' : '<p style="font-size:13px; color:var(--ink-500);">Belum ada tindakan korektif dicatat.</p>') + '</div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">6</span>Klasifikasi Kerugian &amp; Pembelajaran</div><dl class="kv-list"><dt>Estimasi Kerugian</dt><dd>' + AppCore.escapeHtml(i.lossEstimate||'-') + '</dd><dt>Pembelajaran (Lessons Learned)</dt><dd>' + AppCore.escapeHtml(i.lessonsLearned||'-') + '</dd><dt>Status Investigasi</dt><dd><span class="badge ' + (i.status==='Ditutup'?'badge-green':'badge-red') + '">' + i.status + '</span></dd></dl></div>',
+      footHtml:'<button class="btn btn-outline" id="closeInvDetail">Tutup</button><button class="btn btn-secondary" id="previewInvDetail">Preview Laporan</button><button class="btn btn-primary" id="pdfInvDetail">Unduh Laporan</button>',
+      onMount:()=>{
+        document.getElementById('closeInvDetail').addEventListener('click', ()=> AppCore.closeModal());
+        document.getElementById('pdfInvDetail').addEventListener('click', ()=>{
+          if(window.ExportEngine && window.ExportEngine.pickFormat){
+            window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportInvestigationSingle(i, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportInvestigationSingleWord(i, AppCore.requireActiveCompany())
+            );
+          }
+        });
+        document.getElementById('previewInvDetail').addEventListener('click', ()=>{
+          if(!window.ExportEngine || !window.ExportEngine._generateInvestigationSinglePdf){
+            AppCore.toast('Modul export belum siap. Silakan refresh halaman.', 'error'); return;
+          }
+          AppCore.openPreviewModal({
+            title: 'Laporan Investigasi - ' + i.location,
+            generateFn: ()=> window.ExportEngine._generateInvestigationSinglePdf(i, AppCore.requireActiveCompany()),
+            onDownload: ()=> window.ExportEngine.pickFormat(
+              ()=> window.ExportEngine.exportInvestigationSingle(i, AppCore.requireActiveCompany()),
+              ()=> window.ExportEngine.exportInvestigationSingleWord(i, AppCore.requireActiveCompany())
+            )
+          });
+        });
+      }
+    });
+  }
+
+  let causeDraft = [], actionDraft = [];
+  function openForm(company, existing){
+    if(!company){ AppCore.toast('Aktifkan perusahaan terlebih dahulu', 'error'); return; }
+    const isEdit = !!existing;
+    const now = new Date();
+    const d = existing || { incidentType:INCIDENT_TYPES[0], dateTime: now.toISOString().slice(0,16), location:'', reporter:'', investigationTeam:'', victimName:'', victimPosition:'', bodyPart:'', severity:SEVERITY_CLASS[0].v, lostDays:0, chronology:'', immediateCause:'', rootCauses:[], correctiveActions:[], lossEstimate:'', lessonsLearned:'', status:STATUS_LIST[0] };
+    causeDraft = JSON.parse(JSON.stringify(d.rootCauses||[]));
+    actionDraft = JSON.parse(JSON.stringify(d.correctiveActions||[]));
+    AppCore.openModal({
+      title: isEdit ? 'Ubah Laporan Investigasi' : 'Laporan Investigasi Kecelakaan Kerja', subtitle: company.name, wide:true,
+      bodyHtml:'<form id="invForm">' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Data Umum Insiden</div><div class="form-grid">' +
+          '<div class="form-group"><label>Jenis Insiden</label><select class="form-control" id="v_incidentType">' + INCIDENT_TYPES.map(t=>'<option ' + (d.incidentType===t?'selected':'') + '>' + t + '</option>').join('') + '</select></div>' +
+          '<div class="form-group"><label>Tanggal &amp; Waktu Kejadian</label><input type="datetime-local" class="form-control" id="v_dateTime" value="' + d.dateTime + '" required></div>' +
+          '<div class="form-group span-2"><label>Lokasi Kejadian</label><input class="form-control" id="v_location" value="' + AppCore.escapeHtml(d.location) + '" placeholder="cth. Area Loading Dock Gudang B" required></div>' +
+          '<div class="form-group"><label>Dilaporkan Oleh</label><input class="form-control" id="v_reporter" value="' + AppCore.escapeHtml(d.reporter) + '" placeholder="Nama pelapor" required></div>' +
+          '<div class="form-group"><label>Tim Investigasi</label><input class="form-control" id="v_team" value="' + AppCore.escapeHtml(d.investigationTeam) + '" placeholder="cth. HSE Officer, Supervisor, K3LH"></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Data Korban &amp; Cedera</div><div class="form-grid">' +
+          '<div class="form-group"><label>Nama Korban <span class="hint">(kosongkan jika near miss)</span></label><input class="form-control" id="v_victimName" value="' + AppCore.escapeHtml(d.victimName) + '" placeholder="Nama korban"></div>' +
+          '<div class="form-group"><label>Jabatan / Unit Kerja</label><input class="form-control" id="v_victimPosition" value="' + AppCore.escapeHtml(d.victimPosition) + '" placeholder="cth. Operator Forklift"></div>' +
+          '<div class="form-group"><label>Bagian Tubuh Cedera</label><input class="form-control" id="v_bodyPart" value="' + AppCore.escapeHtml(d.bodyPart) + '" placeholder="cth. Tangan kanan, jari telunjuk"></div>' +
+          '<div class="form-group"><label>Klasifikasi Keparahan</label><select class="form-control" id="v_severity">' + SEVERITY_CLASS.map(s=>'<option ' + (d.severity===s.v?'selected':'') + '>' + s.v + '</option>').join('') + '</select></div>' +
+          '<div class="form-group span-2"><label>Estimasi Hari Kerja Hilang</label><input type="number" min="0" class="form-control" id="v_lostDays" value="' + (d.lostDays||0) + '"></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Kronologi Kejadian</div><div class="form-group"><textarea class="form-control" id="v_chronology" rows="4" placeholder="Uraikan kronologi kejadian secara berurutan dan faktual">' + AppCore.escapeHtml(d.chronology) + '</textarea></div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">4</span>Analisis Akar Penyebab</div><div class="form-group" style="margin-bottom:14px;"><label>Penyebab Langsung (Immediate Cause)</label><textarea class="form-control" id="v_immediateCause" rows="2" placeholder="Kondisi/tindakan yang langsung memicu insiden">' + AppCore.escapeHtml(d.immediateCause) + '</textarea></div><label style="display:block; font-size:12px; font-weight:700; color:var(--ink-700); margin-bottom:8px;">Akar Penyebab (Root Cause Analysis)</label><div id="causesListWrap"></div><button type="button" class="add-row-btn" id="addCauseBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tambah Akar Penyebab</button></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">5</span>Tindakan Korektif &amp; Pencegahan</div><div id="actionsListWrap"></div><button type="button" class="add-row-btn" id="addActionBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tambah Tindakan Korektif</button></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">6</span>Klasifikasi Kerugian &amp; Pembelajaran</div><div class="form-grid">' +
+          '<div class="form-group span-2"><label>Estimasi Kerugian</label><input class="form-control" id="v_lossEstimate" value="' + AppCore.escapeHtml(d.lossEstimate) + '" placeholder="cth. Kerusakan unit + downtime &plusmn; Rp 15.000.000"></div>' +
+          '<div class="form-group span-2"><label>Pembelajaran (Lessons Learned)</label><textarea class="form-control" id="v_lessonsLearned" rows="2" placeholder="Pembelajaran untuk mencegah kejadian serupa">' + AppCore.escapeHtml(d.lessonsLearned) + '</textarea></div>' +
+          '<div class="form-group"><label>Status Investigasi</label><select class="form-control" id="v_status">' + STATUS_LIST.map(s=>'<option ' + (d.status===s?'selected':'') + '>' + s + '</option>').join('') + '</select></div>' +
+        '</div></div>' +
+      '</form>',
+      footHtml:'<button class="btn btn-outline" id="cancelInvBtn">Batal</button><button class="btn btn-primary" id="saveInvBtn">' + (isEdit?'Simpan Perubahan':'Simpan Laporan') + '</button>',
+      onMount:(modalEl)=>{
+        function renderCauses(){
+          const wrap = modalEl.querySelector('#causesListWrap');
+          if(causeDraft.length===0){ wrap.innerHTML = '<p style="font-size:12px; color:var(--ink-500); margin-bottom:8px;">Belum ada akar penyebab. Gunakan teknik 5-Why atau Fishbone untuk identifikasi.</p>'; return; }
+          wrap.innerHTML = causeDraft.map((c,idx)=>'<div class="repeat-row" style="grid-template-columns:1fr 2fr auto;"><select class="form-control" data-c="category" data-idx="' + idx + '">' + CAUSE_CATEGORIES.map(cc=>'<option ' + (c.category===cc?'selected':'') + '>' + cc + '</option>').join('') + '</select><input class="form-control" data-c="description" data-idx="' + idx + '" value="' + AppCore.escapeHtml(c.description||'') + '" placeholder="Uraikan akar penyebab"><button type="button" class="icon-btn danger remove-row" data-removec="' + idx + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>').join('');
+          wrap.querySelectorAll('[data-c]').forEach(inp=> inp.addEventListener('input', ()=>{ causeDraft[+inp.dataset.idx][inp.dataset.c] = inp.value; }));
+          wrap.querySelectorAll('[data-removec]').forEach(btn=> btn.addEventListener('click', ()=>{ causeDraft.splice(+btn.dataset.removec,1); renderCauses(); }));
+        }
+        function renderActions(){
+          const wrap = modalEl.querySelector('#actionsListWrap');
+          if(actionDraft.length===0){ wrap.innerHTML = '<p style="font-size:12px; color:var(--ink-500); margin-bottom:8px;">Belum ada tindakan korektif ditambahkan.</p>'; return; }
+          wrap.innerHTML = actionDraft.map((a,idx)=>'<div class="repeat-row" style="grid-template-columns:2fr 1fr 1fr 1fr auto;"><input class="form-control" data-a="action" data-idx="' + idx + '" value="' + AppCore.escapeHtml(a.action||'') + '" placeholder="Tindakan korektif/pencegahan"><input class="form-control" data-a="pic" data-idx="' + idx + '" value="' + AppCore.escapeHtml(a.pic||'') + '" placeholder="PIC"><input type="date" class="form-control" data-a="dueDate" data-idx="' + idx + '" value="' + (a.dueDate||'') + '"><select class="form-control" data-a="status" data-idx="' + idx + '"><option ' + (a.status==='Berjalan'?'selected':'') + '>Berjalan</option><option ' + (a.status==='Selesai'?'selected':'') + '>Selesai</option></select><button type="button" class="icon-btn danger remove-row" data-removea="' + idx + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>').join('');
+          wrap.querySelectorAll('[data-a]').forEach(inp=> inp.addEventListener('input', ()=>{ actionDraft[+inp.dataset.idx][inp.dataset.a] = inp.value; }));
+          wrap.querySelectorAll('[data-removea]').forEach(btn=> btn.addEventListener('click', ()=>{ actionDraft.splice(+btn.dataset.removea,1); renderActions(); }));
+        }
+        renderCauses(); renderActions();
+        modalEl.querySelector('#addCauseBtn').addEventListener('click', ()=>{ causeDraft.push({category:CAUSE_CATEGORIES[0], description:''}); renderCauses(); });
+        modalEl.querySelector('#addActionBtn').addEventListener('click', ()=>{ actionDraft.push({action:'', pic:'', dueDate:'', status:'Berjalan'}); renderActions(); });
+        modalEl.querySelector('#cancelInvBtn').addEventListener('click', ()=> AppCore.closeModal());
+        modalEl.querySelector('#saveInvBtn').addEventListener('click', ()=>{
+          const location = modalEl.querySelector('#v_location').value.trim(), reporter = modalEl.querySelector('#v_reporter').value.trim(), dateTime = modalEl.querySelector('#v_dateTime').value;
+          if(!location || !reporter || !dateTime){ AppCore.toast('Lokasi, pelapor, dan waktu kejadian wajib diisi', 'error'); return; }
+          const payload = { companyId: company.id, incidentType: modalEl.querySelector('#v_incidentType').value, dateTime, location, reporter, investigationTeam: modalEl.querySelector('#v_team').value.trim(), victimName: modalEl.querySelector('#v_victimName').value.trim(), victimPosition: modalEl.querySelector('#v_victimPosition').value.trim(), bodyPart: modalEl.querySelector('#v_bodyPart').value.trim(), severity: modalEl.querySelector('#v_severity').value, lostDays: +modalEl.querySelector('#v_lostDays').value || 0, chronology: modalEl.querySelector('#v_chronology').value.trim(), immediateCause: modalEl.querySelector('#v_immediateCause').value.trim(), rootCauses: causeDraft, correctiveActions: actionDraft, lossEstimate: modalEl.querySelector('#v_lossEstimate').value.trim(), lessonsLearned: modalEl.querySelector('#v_lessonsLearned').value.trim(), status: modalEl.querySelector('#v_status').value, updatedAt: new Date().toISOString() };
+          const list = DB.getInvestigations();
+          if(isEdit){ const idx = list.findIndex(x=>x.id===existing.id); list[idx] = Object.assign({}, list[idx], payload); }
+          else { list.push(Object.assign({ id:DB.genId('inv'), createdAt:new Date().toISOString() }, payload)); }
+          DB.saveInvestigations(list); AppCore.closeModal(); AppCore.toast(isEdit?'Laporan berhasil diperbarui':'Laporan investigasi berhasil disimpan', 'success'); AppCore.refreshCurrentPage();
+        });
+      }
+    });
+  }
+  return { render, INCIDENT_TYPES, SEVERITY_CLASS, CAUSE_CATEGORIES, STATUS_LIST };
+})();
+</script>
+
+<script>
+/* ============================================================
+   MODUL: PROFIL PERUSAHAAN
+   ============================================================ */
+const PerusahaanPage = (function(){
+  const SECTORS = [
+    { key:'industri', label:'Industri', icon:icoIndustri() },
+    { key:'perdagangan', label:'Perdagangan', icon:icoPerdagangan() },
+    { key:'manufaktur', label:'Manufaktur', icon:icoManufaktur() },
+    { key:'agraris', label:'Agraris & Ekstraktif', icon:icoAgraris() },
+    { key:'teknologi', label:'Teknologi', icon:icoTeknologi() },
+    { key:'transportasi', label:'Transportasi & Logistik', icon:icoTransportasi() },
+  ];
+  function icoIndustri(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 21V10l5 3V7l5 3V4l5 3v14H3z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>'; }
+  function icoPerdagangan(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 9l1.5-5h15L21 9M3 9v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9h18M9 13a3 3 0 0 0 6 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function icoManufaktur(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.7"/><path d="M8 11v3a2 2 0 0 0 2 2h2m4-5V8a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="1.7"/></svg>'; }
+  function icoAgraris(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 21V9m0 0c0-3 2-5.5 6-6 .3 4-2 6.5-6 6zm0 0C12 6 10 3.5 6 3c-.3 4 2 6.5 6 6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 21h14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'; }
+  function icoTeknologi(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="12" rx="1.5" stroke="currentColor" stroke-width="1.7"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'; }
+  function icoTransportasi(){ return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 16V8a1 1 0 0 1 1-1h9l4 4v5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="7.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.7"/><circle cx="16.5" cy="16.5" r="2" stroke="currentColor" stroke-width="1.7"/></svg>'; }
+  function sectorMeta(key){ return SECTORS.find(s=>s.key===key) || SECTORS[0]; }
+
+  function render(container){
+    const companies = DB.getCompanies(), activeId = DB.getActiveCompanyId();
+    container.innerHTML = '<div class="page-head"><div><div class="page-head-eyebrow">Manajemen Entitas</div><h2>Profil Perusahaan</h2><p class="page-head-desc">Kelola seluruh data perusahaan yang ditangani dalam sistem K3 ini. Pilih satu perusahaan sebagai konteks aktif untuk modul risiko, inspeksi, dan investigasi.</p></div><div class="page-head-actions"><button class="btn btn-primary" id="btnAddCompany"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg> Tambah Perusahaan</button></div></div>' +
+      (companies.length===0 ? emptyState() : '<div class="company-grid" id="companyGrid"></div>');
+    if(companies.length>0){ const grid = container.querySelector('#companyGrid'); companies.forEach(c=> grid.appendChild(companyCard(c, c.id===activeId))); }
+    container.querySelector('#btnAddCompany').addEventListener('click', ()=> openForm());
+    if(companies.length===0){ container.querySelector('#emptyAddBtn')?.addEventListener('click', ()=> openForm()); }
+  }
+  function emptyState(){ return '<div class="card"><div class="empty-state"><svg width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><h4>Belum Ada Perusahaan Terdaftar</h4><p>Tambahkan profil perusahaan pertama Anda untuk mulai menggunakan modul manajemen risiko, inspeksi, dan investigasi K3.</p><button class="btn btn-primary" id="emptyAddBtn">Tambah Perusahaan Pertama</button></div></div>'; }
+  function companyCard(c, isActive){
+    const el = document.createElement('div'); el.className = 'company-card ' + (isActive?'is-active':''); const sm = sectorMeta(c.sector);
+    el.innerHTML = (isActive ? '<div class="active-tag"><span class="badge badge-yellow"><span class="badge-dot"></span>Aktif</span></div>' : '') +
+      '<div class="company-card-top"><div class="company-icon">' + sm.icon + '</div></div>' +
+      '<div class="company-card-name">' + AppCore.escapeHtml(c.name) + '</div>' +
+      '<div class="company-card-addr">' + AppCore.escapeHtml(c.address) + '</div>' +
+      '<div class="company-card-tags">' +
+        '<span class="badge badge-navy">' + sm.label + '</span>' +
+        '<span class="badge badge-gray">' + (c.engagementType==='barang' ? 'Bidang Barang' : 'Bidang Jasa') + '</span>' +
+        (c.employees ? '<span class="badge badge-gray">' + c.employees + ' Karyawan</span>':'') +
+      '</div>' +
+      '<div class="company-card-actions">' +
+        (!isActive ? '<button class="btn btn-sm btn-secondary set-active-btn">Jadikan Aktif</button>' : '<button class="btn btn-sm btn-outline" disabled>Sedang Aktif</button>') +
+        '<button class="btn btn-sm btn-outline edit-btn">Ubah</button>' +
+        '<button class="btn btn-sm btn-danger del-btn">Hapus</button>' +
+      '</div>';
+    el.querySelector('.set-active-btn')?.addEventListener('click', ()=>{ DB.setActiveCompanyId(c.id); AppCore.renderCompanyPill(); AppCore.toast(c.name + ' dijadikan perusahaan aktif', 'success'); AppCore.refreshCurrentPage(); });
+    el.querySelector('.edit-btn').addEventListener('click', ()=> openForm(c));
+    el.querySelector('.del-btn').addEventListener('click', ()=>{
+      AppCore.openConfirm({ title:'Hapus Perusahaan', message:'Anda yakin ingin menghapus <strong>' + AppCore.escapeHtml(c.name) + '</strong>? Data risiko, inspeksi, dan investigasi terkait perusahaan ini tidak akan otomatis terhapus, namun tidak akan terhubung dengan entitas manapun.', confirmLabel:'Hapus Permanen', tone:'danger',
+        onConfirm:()=>{ const list = DB.getCompanies().filter(x=>x.id!==c.id); DB.saveCompanies(list); if(DB.getActiveCompanyId()===c.id){ DB.setActiveCompanyId(list.length ? list[0].id : null); } AppCore.renderCompanyPill(); AppCore.toast('Perusahaan berhasil dihapus', 'success'); AppCore.refreshCurrentPage(); }
+      });
+    });
+    return el;
+  }
+  function openForm(existing){
+    const isEdit = !!existing;
+    const d = existing || { name:'', address:'', engagementType:'barang', sector:'industri', pic:'', employees:'' };
+    const sectorOptionsHtml = SECTORS.map(s=>'<div class="sector-option ' + (d.sector===s.key?'checked':'') + '" data-sector="' + s.key + '">' + s.icon + '<div class="sector-option-label">' + s.label + '</div></div>').join('');
+    AppCore.openModal({
+      title: isEdit ? 'Ubah Profil Perusahaan' : 'Tambah Perusahaan Baru', subtitle: 'Lengkapi data identitas dan lingkup usaha perusahaan', wide:true,
+      bodyHtml: '<form id="companyForm">' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">1</span>Identitas Perusahaan</div><div class="form-grid">' +
+          '<div class="form-group span-2"><label>Nama Perusahaan</label><input type="text" class="form-control" id="f_name" value="' + AppCore.escapeHtml(d.name) + '" placeholder="cth. PT Industri Banten Sejahtera" required></div>' +
+          '<div class="form-group span-2"><label>Alamat Perusahaan</label><textarea class="form-control" id="f_address" rows="2" placeholder="Alamat lengkap operasional perusahaan" required>' + AppCore.escapeHtml(d.address) + '</textarea></div>' +
+          '<div class="form-group"><label>Penanggung Jawab K3 <span class="hint">(opsional)</span></label><input type="text" class="form-control" id="f_pic" value="' + AppCore.escapeHtml(d.pic||'') + '" placeholder="Nama PJ K3 / HSE Manager"></div>' +
+          '<div class="form-group"><label>Jumlah Karyawan <span class="hint">(opsional)</span></label><input type="number" min="0" class="form-control" id="f_employees" value="' + (d.employees||'') + '" placeholder="cth. 150"></div>' +
+        '</div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">2</span>Kegiatan Usaha</div><div class="form-group"><label>Perusahaan ini bergerak di bidang</label><div class="pill-group" id="engagementGroup">' +
+          '<label class="pill-option ' + (d.engagementType==='barang'?'checked':'') + '"><input type="radio" name="engagement" value="barang" ' + (d.engagementType==='barang'?'checked':'') + '> Barang</label>' +
+          '<label class="pill-option ' + (d.engagementType==='jasa'?'checked':'') + '"><input type="radio" name="engagement" value="jasa" ' + (d.engagementType==='jasa'?'checked':'') + '> Jasa</label>' +
+        '</div></div></div>' +
+        '<div class="form-section"><div class="form-section-title"><span class="num">3</span>Lingkup Usaha</div><div class="form-group"><label>Pilih sektor yang paling sesuai</label><div class="sector-grid" id="sectorGrid">' + sectorOptionsHtml + '</div><input type="hidden" id="f_sector" value="' + d.sector + '"></div></div>' +
+      '</form>',
+      footHtml: '<button class="btn btn-outline" id="cancelFormBtn">Batal</button><button class="btn btn-primary" id="saveCompanyBtn">' + (isEdit?'Simpan Perubahan':'Tambah Perusahaan') + '</button>',
+      onMount:(modalEl)=>{
+        modalEl.querySelector('#cancelFormBtn').addEventListener('click', ()=> AppCore.closeModal());
+        modalEl.querySelectorAll('#engagementGroup .pill-option').forEach(opt=> opt.addEventListener('click', ()=>{ modalEl.querySelectorAll('#engagementGroup .pill-option').forEach(o=>o.classList.remove('checked')); opt.classList.add('checked'); }));
+        modalEl.querySelectorAll('#sectorGrid .sector-option').forEach(opt=> opt.addEventListener('click', ()=>{ modalEl.querySelectorAll('#sectorGrid .sector-option').forEach(o=>o.classList.remove('checked')); opt.classList.add('checked'); modalEl.querySelector('#f_sector').value = opt.dataset.sector; }));
+        modalEl.querySelector('#saveCompanyBtn').addEventListener('click', ()=>{
+          const name = modalEl.querySelector('#f_name').value.trim(), address = modalEl.querySelector('#f_address').value.trim();
+          if(!name || !address){ AppCore.toast('Nama dan alamat perusahaan wajib diisi', 'error'); return; }
+          const engagementType = modalEl.querySelector('input[name="engagement"]:checked').value, sector = modalEl.querySelector('#f_sector').value, pic = modalEl.querySelector('#f_pic').value.trim(), employees = modalEl.querySelector('#f_employees').value;
+          const companies = DB.getCompanies();
+          if(isEdit){ const idx = companies.findIndex(c=>c.id===existing.id); companies[idx] = Object.assign({}, companies[idx], {name, address, engagementType, sector, pic, employees}); }
+          else { const newCo = { id:DB.genId('co'), name, address, engagementType, sector, pic, employees, createdAt:new Date().toISOString() }; companies.push(newCo); if(!DB.getActiveCompanyId()) DB.setActiveCompanyId(newCo.id); }
+          DB.saveCompanies(companies); AppCore.closeModal(); AppCore.renderCompanyPill(); AppCore.toast(isEdit ? 'Perubahan berhasil disimpan' : 'Perusahaan berhasil ditambahkan', 'success'); AppCore.refreshCurrentPage();
+        });
+      }
+    });
+  }
+  return { render, SECTORS, sectorMeta };
+})();
+
+/* ============================================================
+   MODUL: DASHBOARD
+   ============================================================ */
+const DashboardPage = (function(){
+  function render(container){
+    const companies = DB.getCompanies(), activeId = DB.getActiveCompanyId(), active = companies.find(c=>c.id===activeId);
+    const risks = DB.getRisks().filter(r=> !active || r.companyId===active.id);
+    const inspections = DB.getInspections().filter(i=> !active || i.companyId===active.id);
+    const investigations = DB.getInvestigations().filter(i=> !active || i.companyId===active.id);
+    const extremeRisk = risks.filter(r=> RisikoPage.riskLevel(r.initialScore).label==='Ekstrem').length;
+    const openFindings = inspections.reduce((a,i)=> a + (i.findings?.filter(f=>f.status==='Terbuka').length||0), 0);
+    const openInvestigations = investigations.filter(i=> i.status!=='Ditutup').length;
+    const fatalCount = investigations.filter(i=> i.severity==='Fatal / Meninggal Dunia').length;
+    container.innerHTML = (!active ?
+      '<div class="card" style="margin-bottom:22px; background:linear-gradient(135deg, var(--navy-900), var(--navy-700)); border:none;"><div class="card-pad" style="display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;"><div><h3 style="color:#fff; margin-bottom:6px;">Selamat Datang di PRISMA K3</h3><p style="color:var(--steel-300); font-size:13px; max-width:480px; line-height:1.5;">Tambahkan profil perusahaan pertama Anda untuk mulai mencatat manajemen risiko, inspeksi, dan investigasi K3.</p></div><button class="btn btn-primary" id="dashAddCompanyBtn">Tambah Perusahaan</button></div></div>' :
+      '<div class="card" style="margin-bottom:22px; background:linear-gradient(135deg, var(--navy-900), var(--navy-700)); border:none;"><div class="card-pad" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;"><div class="company-icon" style="width:54px; height:54px;">' + PerusahaanPage.sectorMeta(active.sector).icon + '</div><div style="flex:1; min-width:200px;"><h3 style="color:#fff;">' + AppCore.escapeHtml(active.name) + '</h3><p style="color:var(--steel-300); font-size:12.5px; margin-top:3px;">' + AppCore.escapeHtml(active.address) + '</p></div><div style="display:flex; gap:8px; flex-wrap:wrap;"><span class="badge badge-yellow">' + PerusahaanPage.sectorMeta(active.sector).label + '</span><span class="badge" style="background:rgba(255,255,255,0.12); color:#fff;">' + (active.engagementType==='barang'?'Bidang Barang':'Bidang Jasa') + '</span></div></div></div>') +
+      '<div class="stat-grid">' +
+        '<div class="stat-card tone-navy"><div class="stat-label">Total Risiko Teridentifikasi <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--navy-700)"><path d="M12 2 22 20H2L12 2z" stroke-width="1.6" stroke-linejoin="round"/></svg></div><div class="stat-value">' + risks.length + '</div><div class="stat-foot">' + extremeRisk + ' risiko level ekstrem</div></div>' +
+        '<div class="stat-card tone-amber"><div class="stat-label">Temuan Inspeksi Terbuka <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--caution-amber)"><path d="M9 11l3 3L22 4" stroke-width="1.6" stroke-linecap="round"/></svg></div><div class="stat-value">' + openFindings + '</div><div class="stat-foot">dari ' + inspections.length + ' sesi inspeksi</div></div>' +
+        '<div class="stat-card tone-red"><div class="stat-label">Investigasi Berjalan <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--hazard-red)"><circle cx="11" cy="11" r="7" stroke-width="1.6"/></svg></div><div class="stat-value">' + openInvestigations + '</div><div class="stat-foot">' + fatalCount + ' insiden fatal tercatat</div></div>' +
+        '<div class="stat-card tone-green"><div class="stat-label">Perusahaan Terkelola</div><div class="stat-value">' + companies.length + '</div><div class="stat-foot">Total entitas dalam sistem</div></div>' +
+      '</div>' +
+      '<div style="display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start;" class="dash-grid">' +
+        '<div class="card"><div class="card-head"><h3>Distribusi Tingkat Risiko</h3><button class="btn btn-sm btn-outline" data-nav="risiko">Lihat Semua</button></div><div class="card-pad">' + riskDistribution(risks) + '</div></div>' +
+        '<div class="card"><div class="card-head"><h3>Aktivitas Terbaru</h3></div><div class="card-pad" style="max-height:340px; overflow-y:auto;" class="scrollbar-thin">' + recentActivity(risks, inspections, investigations) + '</div></div>' +
+      '</div>' +
+      '<div class="card" style="margin-top:18px;"><div class="card-head"><h3>Perusahaan Terdaftar</h3><button class="btn btn-sm btn-primary" data-nav="perusahaan">Kelola Perusahaan</button></div>' +
+        '<div class="card-pad">' + (companies.length===0 ? '<p style="font-size:13px; color:var(--ink-500);">Belum ada perusahaan terdaftar.</p>' : '<div class="table-wrap"><table class="data-table"><thead><tr><th>Nama Perusahaan</th><th>Sektor</th><th>Bidang</th><th>Alamat</th><th>Status</th></tr></thead><tbody>' + companies.map(c=>'<tr><td class="cell-strong">' + AppCore.escapeHtml(c.name) + '</td><td><span class="badge badge-navy">' + PerusahaanPage.sectorMeta(c.sector).label + '</span></td><td>' + (c.engagementType==='barang'?'Barang':'Jasa') + '</td><td style="max-width:240px;">' + AppCore.escapeHtml(c.address) + '</td><td>' + (c.id===activeId ? '<span class="badge badge-yellow"><span class="badge-dot"></span>Aktif</span>' : '<span class="badge badge-gray">Tidak Aktif</span>') + '</td></tr>').join('') + '</tbody></table></div>') + '</div>' +
+      '</div>';
+    container.querySelectorAll('[data-nav]').forEach(btn=> btn.addEventListener('click', ()=> AppCore.navigateTo(btn.dataset.nav)));
+    container.querySelector('#dashAddCompanyBtn')?.addEventListener('click', ()=> AppCore.navigateTo('perusahaan'));
+  }
+  function riskDistribution(risks){
+    if(risks.length===0){ return '<div class="empty-state" style="padding:24px;"><p>Belum ada data risiko untuk ditampilkan.</p></div>'; }
+    const levels = ['Rendah','Sedang','Tinggi','Ekstrem'], colors = {Rendah:'var(--safety-green)', Sedang:'var(--safety-yellow-dark)', Tinggi:'var(--caution-amber)', Ekstrem:'var(--hazard-red)'};
+    const counts = levels.map(l=> risks.filter(r=> RisikoPage.riskLevel(r.initialScore).label===l).length), max = Math.max(...counts, 1);
+    return '<div style="display:flex; flex-direction:column; gap:14px;">' + levels.map((l,idx)=>'<div><div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:600; margin-bottom:5px;"><span>' + l + '</span><span>' + counts[idx] + '</span></div><div style="background:var(--bg-subtle); border-radius:6px; height:10px; overflow:hidden;"><div style="width:' + (counts[idx]/max*100) + '%; height:100%; background:' + colors[l] + '; border-radius:6px; transition:width .4s;"></div></div></div>').join('') + '</div>';
+  }
+  function recentActivity(risks, inspections, investigations){
+    const items = [
+      ...risks.map(r=>({ type:'Risiko', icon:'\u26A0', date:r.createdAt, text:'Identifikasi bahaya: ' + r.hazardDesc, color:'var(--navy-700)' })),
+      ...inspections.map(i=>({ type:'Inspeksi', icon:'\uD83D\uDD0D', date:i.createdAt, text:'Inspeksi area ' + i.area, color:'var(--safety-yellow-dark)' })),
+      ...investigations.map(i=>({ type:'Investigasi', icon:'\uD83D\uDCCB', date:i.createdAt, text:'Insiden di ' + i.location, color:'var(--hazard-red)' })),
+    ].sort((a,b)=> new Date(b.date) - new Date(a.date)).slice(0,8);
+    if(items.length===0){ return '<p style="font-size:13px; color:var(--ink-500); text-align:center; padding:20px 0;">Belum ada aktivitas tercatat.</p>'; }
+    return items.map(it=>'<div style="display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-soft);"><div style="width:30px; height:30px; border-radius:8px; background:' + it.color + '1A; display:flex; align-items:center; justify-content:center; flex:none; font-size:14px;">' + it.icon + '</div><div style="flex:1; min-width:0;"><div style="font-size:12.5px; font-weight:600; color:var(--ink-900); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + AppCore.escapeHtml(it.text) + '</div><div style="font-size:11px; color:var(--ink-500); margin-top:2px;">' + it.type + ' &bull; ' + AppCore.fmtDate(it.date) + '</div></div></div>').join('');
+  }
+  return { render };
+})();
+</script>
+
+<script>
+// Definisikan ExportEngine sebagai objek global terlebih dahulu
+window.ExportEngine = window.ExportEngine || {};
+</script>
+
+<script>
+/* ============================================================
+   EXPORT ENGINE - PDF (jsPDF) & WORD (docx.js)
+   ============================================================ */
+(function(){
+  const PAGE_W = 210, PAGE_H = 297, MARGIN = 18;
+  const COL_NAVY = [11,31,58], COL_YELLOW = [244,163,0], COL_RED = [215,38,61], COL_GREEN = [27,153,139], COL_AMBER = [232,135,30], COL_GRAY = [107,114,128], COL_INK = [21,25,30];
+
+  function levelColor(label){
+    if(label==='Rendah') return COL_GREEN; if(label==='Sedang') return COL_YELLOW; if(label==='Tinggi') return COL_AMBER;
+    if(label==='Ekstrem'||label==='Kritis'||label==='Fatal / Meninggal Dunia') return COL_RED; return COL_GRAY;
+  }
+  function newDoc(){ const { jsPDF } = window.jspdf; return new jsPDF({ unit:'mm', format:'a4' }); }
+
+  function drawHeader(doc, reportTitle, company){
+    const stripeH = 4, stripeCount = 24, stripeW = PAGE_W/stripeCount;
+    for(let i=0;i<stripeCount;i++){ doc.setFillColor(...(i%2===0?COL_YELLOW:COL_NAVY)); doc.rect(i*stripeW, 0, stripeW, stripeH, 'F'); }
+    doc.setFillColor(...COL_NAVY); doc.rect(0, stripeH, PAGE_W, 22, 'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('PRISMA K3', MARGIN, stripeH+10);
+    doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(220,220,220); doc.text('Sistem Informasi Manajemen Keselamatan & Kesehatan Kerja', MARGIN, stripeH+15.5);
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_YELLOW); doc.text(reportTitle, PAGE_W-MARGIN, stripeH+10, {align:'right'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(220,220,220); doc.text(company ? company.name : '-', PAGE_W-MARGIN, stripeH+15.5, {align:'right'});
+    return stripeH + 22 + 8;
+  }
+  function drawFooter(doc, pageNum){
+    const y = PAGE_H - 12;
+    doc.setDrawColor(220,220,220); doc.setLineWidth(0.2); doc.line(MARGIN, y-3, PAGE_W-MARGIN, y-3);
+    doc.setFontSize(7.5); doc.setTextColor(...COL_GRAY); doc.setFont('helvetica','normal');
+    doc.text('Dicetak otomatis oleh PRISMA K3 \u2022 ' + new Date().toLocaleString('id-ID'), MARGIN, y);
+    doc.text('Halaman ' + pageNum, PAGE_W-MARGIN, y, {align:'right'});
+  }
+  function checkPageBreak(doc, y, needed){
+    needed = needed || 20;
+    if(y + needed > PAGE_H - 18){ doc.addPage(); return drawHeader(doc, doc._reportTitle, doc._company); }
+    return y;
+  }
+  function sectionTitle(doc, y, num, title){
+    y = checkPageBreak(doc, y, 14); doc.setFillColor(...COL_YELLOW); doc.circle(MARGIN+2.2, y+1, 2.4, 'F');
+    doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text(String(num), MARGIN+2.2, y+1.9, {align:'center'});
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text(title.toUpperCase(), MARGIN+7, y+2);
+    doc.setDrawColor(...COL_NAVY); doc.setLineWidth(0.4); doc.line(MARGIN, y+5, PAGE_W-MARGIN, y+5); return y + 11;
+  }
+  function kvRow(doc, y, label, value, opts){
+    opts = opts || {};
+    y = checkPageBreak(doc, y, 8); const labelW = opts.labelW || 48;
+    doc.setFontSize(8.5); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_GRAY); doc.text(label, MARGIN, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(...COL_INK);
+    const lines = doc.splitTextToSize(String(value||'-'), PAGE_W - MARGIN*2 - labelW); doc.text(lines, MARGIN+labelW, y); return y + (lines.length * 4.6) + 1.5;
+  }
+  function paragraph(doc, y, text, opts){
+    opts = opts || {};
+    y = checkPageBreak(doc, y, 10); doc.setFontSize(opts.size || 9); doc.setFont('helvetica', opts.bold ? 'bold':'normal'); doc.setTextColor(...(opts.color || COL_INK));
+    const lines = doc.splitTextToSize(text || '-', PAGE_W - MARGIN*2);
+    for(let li=0; li<lines.length; li++){ y = checkPageBreak(doc, y, 6); doc.text(lines[li], MARGIN, y); y += 4.6; }
+    return y + 2;
+  }
+  function badge(doc, x, y, text, color){
+    doc.setFillColor(color[0],color[1],color[2]); const w = doc.getTextWidth(text) + 6;
+    doc.roundedRect(x, y-3.6, w, 5.2, 1.2, 1.2, 'F'); doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.text(text, x+3, y); return w;
+  }
+  function simpleTable(doc, y, headers, rows, colWidths){
+    y = checkPageBreak(doc, y, 14); const totalW = PAGE_W - MARGIN*2; const widths = colWidths || headers.map(()=> totalW/headers.length);
+    doc.setFillColor(238,241,237); doc.rect(MARGIN, y-4.5, totalW, 7, 'F'); doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_GRAY);
+    let x = MARGIN; headers.forEach((h,i)=>{ doc.text(h, x+2, y); x += widths[i]; }); y += 5;
+    doc.setFont('helvetica','normal'); doc.setTextColor(...COL_INK); doc.setFontSize(8);
+    rows.forEach(row=>{
+      let maxLines = 1;
+      const wrapped = row.map((cell,i)=>{ const w = doc.splitTextToSize(String(cell||'-'), widths[i]-4); maxLines = Math.max(maxLines, w.length); return w; });
+      const rowH = maxLines*4.2 + 2; y = checkPageBreak(doc, y, rowH+2); x = MARGIN;
+      doc.setDrawColor(226,229,224); doc.setLineWidth(0.15); doc.line(MARGIN, y-3.5, MARGIN+totalW, y-3.5);
+      wrapped.forEach((lines,i)=>{ doc.text(lines, x+2, y); x += widths[i]; }); y += rowH;
+    });
+    return y+3;
+  }
+  function finalizeDoc(doc){ const total = doc.internal.getNumberOfPages(); for(let p=1;p<=total;p++){ doc.setPage(p); drawFooter(doc, p); } }
+  function download(doc, filename){ finalizeDoc(doc); doc.save(filename); AppCore.toast('Laporan PDF berhasil diunduh', 'success'); }
+
+  // ===================== RISIKO: Single PDF =====================
+  function _generateRiskSinglePdf(r, company){
+    const doc = newDoc(); doc._reportTitle = 'LAPORAN MANAJEMEN RISIKO K3'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('LAPORAN IDENTIFIKASI, KAJIAN & PENGENDALIAN RISIKO', MARGIN, y+2); y += 9;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('No. Dokumen: HIRADC-' + r.id.toUpperCase() + '  |  Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    y = sectionTitle(doc, y, 1, 'Identifikasi Bahaya');
+    y = kvRow(doc, y, 'Perusahaan', company?company.name:'-'); y = kvRow(doc, y, 'Area / Lokasi', r.area); y = kvRow(doc, y, 'Aktivitas', r.activity); y = kvRow(doc, y, 'Jenis Bahaya', r.hazardType); y = kvRow(doc, y, 'Sumber Bahaya', r.hazardSource); y = kvRow(doc, y, 'Deskripsi Bahaya', r.hazardDesc); y = kvRow(doc, y, 'Potensi Dampak', r.potentialImpact); y = kvRow(doc, y, 'Pekerja Terpapar', r.exposedWorkers); y += 3;
+    y = sectionTitle(doc, y, 2, 'Kajian Risiko (Matriks 5x5)');
+    const initLevel = RisikoPage.riskLevel(r.initialScore);
+    y = kvRow(doc, y, 'Kemungkinan', r.likelihood + ' \u2014 ' + (RisikoPage.LIKELIHOOD.find(l=>l.v===r.likelihood)?.label||''));
+    y = kvRow(doc, y, 'Keparahan', r.severity + ' \u2014 ' + (RisikoPage.SEVERITY.find(s=>s.v===r.severity)?.label||''));
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...COL_GRAY); doc.text('Tingkat Risiko Awal', MARGIN, y);
+    badge(doc, MARGIN+48, y, initLevel.label.toUpperCase() + ' \u2014 SKOR ' + r.initialScore, levelColor(initLevel.label)); y += 8;
+    if(r.residualScore){ const resLevel = RisikoPage.riskLevel(r.residualScore); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...COL_GRAY); doc.text('Tingkat Risiko Residual', MARGIN, y); badge(doc, MARGIN+48, y, resLevel.label.toUpperCase() + ' \u2014 SKOR ' + r.residualScore, levelColor(resLevel.label)); y += 9; } y += 2;
+    y = sectionTitle(doc, y, 3, 'Pengendalian Risiko (Hierarchy of Control)');
+    RisikoPage.HOC_LEVELS.forEach((h,i)=>{ const val = r.controls && r.controls[h.key]; if(val && val.trim()){ y = checkPageBreak(doc, y, 12); doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...COL_NAVY); doc.text((i+1) + '. ' + h.label, MARGIN, y); y += 4.5; y = paragraph(doc, y, val, {size:8.5}); } });
+    y = sectionTitle(doc, y, 4, 'Komunikasi Risiko');
+    y = kvRow(doc, y, 'Metode Komunikasi', r.commMethod); y = kvRow(doc, y, 'Penanggung Jawab', r.commPic); y = kvRow(doc, y, 'Sasaran/Pihak Terkait', r.commAudience); y = kvRow(doc, y, 'Tanggal Komunikasi', AppCore.fmtDate(r.commDate)); y += 3;
+    y = sectionTitle(doc, y, 5, 'Monitoring Kinerja');
+    y = kvRow(doc, y, 'Status', r.monitoringStatus); y = kvRow(doc, y, 'Indikator Kinerja', r.monitoringKpi); y = kvRow(doc, y, 'Tanggal Review', AppCore.fmtDate(r.monitoringDate)); y = kvRow(doc, y, 'Catatan Review', r.monitoringNotes);
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportRiskSingle(r, company){ const doc = _generateRiskSinglePdf(r, company); download(doc, 'Laporan-Risiko-' + (r.area||'area').replace(/\s+/g,'-') + '.pdf'); }
+
+  // ===================== RISIKO: Recap PDF =====================
+  function _generateRiskRecapPdf(risks, company){
+    const doc = newDoc(); doc._reportTitle = 'REKAPITULASI MANAJEMEN RISIKO K3'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('REKAPITULASI HIRADC', MARGIN, y+2); y += 10;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('Total ' + risks.length + ' catatan risiko  |  Dicetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    const rows = risks.map(r=>{ const lvl = RisikoPage.riskLevel(r.initialScore); return [r.area, r.hazardDesc, r.hazardType, lvl.label + ' (' + r.initialScore + ')', r.monitoringStatus||'-']; });
+    y = simpleTable(doc, y, ['Area','Bahaya','Jenis','Tk. Risiko','Status'], rows, [32,62,28,30,20]); y += 10;
+    y = sectionTitle(doc, y, 1, 'Ringkasan');
+    y = kvRow(doc, y, 'Total Risiko', String(risks.length));
+    y = kvRow(doc, y, 'Risiko Ekstrem', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Ekstrem').length));
+    y = kvRow(doc, y, 'Risiko Tinggi', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Tinggi').length));
+    y = kvRow(doc, y, 'Risiko Sedang', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Sedang').length));
+    y = kvRow(doc, y, 'Risiko Rendah', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Rendah').length));
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportRiskRecap(risks, company){ const doc = _generateRiskRecapPdf(risks, company); download(doc, 'Rekap-Manajemen-Risiko.pdf'); }
+
+  // ===================== INSPEKSI: Single PDF =====================
+  function _generateInspectionSinglePdf(insp, company){
+    const doc = newDoc(); doc._reportTitle = 'LAPORAN INSPEKSI K3'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('LAPORAN HASIL INSPEKSI K3 LAPANGAN', MARGIN, y+2); y += 9;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('No. Dokumen: INSP-' + insp.id.toUpperCase() + '  |  Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    y = sectionTitle(doc, y, 1, 'Data Umum Inspeksi');
+    y = kvRow(doc, y, 'Perusahaan', company?company.name:'-'); y = kvRow(doc, y, 'Area / Lokasi', insp.area); y = kvRow(doc, y, 'Tanggal', AppCore.fmtDate(insp.date)); y = kvRow(doc, y, 'Shift', insp.shift); y = kvRow(doc, y, 'Inspektor', insp.inspector); y = kvRow(doc, y, 'Didampingi Oleh', insp.accompaniedBy); y = kvRow(doc, y, 'Kategori Inspeksi', (insp.categories||[]).join(', ')); y += 3;
+    y = sectionTitle(doc, y, 2, 'Daftar Temuan');
+    if(!insp.findings || insp.findings.length===0){ y = paragraph(doc, y, 'Tidak ditemukan kondisi/tindakan tidak aman pada inspeksi ini.'); }
+    else { insp.findings.forEach((f,idx)=>{ y = checkPageBreak(doc, y, 28); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...COL_NAVY); doc.text('Temuan #' + (idx+1) + ' \u2014 ' + f.type, MARGIN, y); badge(doc, PAGE_W-MARGIN-30, y-3.6, f.riskRating.toUpperCase(), levelColor(f.riskRating)); y += 5.5; y = kvRow(doc, y, 'Lokasi', f.location, {labelW:32}); y = kvRow(doc, y, 'Deskripsi', f.description, {labelW:32}); y = kvRow(doc, y, 'Rekomendasi', f.recommendation, {labelW:32}); y = kvRow(doc, y, 'PIC / Target', (f.pic||'-') + '  \u2022  Target: ' + AppCore.fmtDate(f.dueDate), {labelW:32}); y = kvRow(doc, y, 'Status', f.status, {labelW:32}); y += 2; doc.setDrawColor(226,229,224); doc.line(MARGIN, y-2, PAGE_W-MARGIN, y-2); y += 3; }); }
+    y = sectionTitle(doc, y, 3, 'Kesimpulan'); y = kvRow(doc, y, 'Kesimpulan Umum', insp.conclusion); y = kvRow(doc, y, 'Ditandatangani Oleh', insp.signedBy);
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportInspectionSingle(insp, company){ const doc = _generateInspectionSinglePdf(insp, company); download(doc, 'Laporan-Inspeksi-' + (insp.area||'area').replace(/\s+/g,'-') + '.pdf'); }
+
+  // ===================== INSPEKSI: Recap PDF =====================
+  function _generateInspectionRecapPdf(inspections, company){
+    const doc = newDoc(); doc._reportTitle = 'REKAPITULASI INSPEKSI K3'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('REKAPITULASI INSPEKSI K3 LAPANGAN', MARGIN, y+2); y += 10;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('Total ' + inspections.length + ' sesi inspeksi  |  Dicetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    const rows = inspections.map(i=>{
+      const st = InspeksiPage.overallStatus(i), hr = InspeksiPage.highestRisk(i.findings);
+      return [AppCore.fmtDate(i.date), i.area, i.inspector, String(i.findings?.length||0), hr||'-', st];
+    });
+    y = simpleTable(doc, y, ['Tanggal','Area','Inspektor','Jml Temuan','Risiko Tertinggi','Status'], rows, [26,40,38,18,30,20]); y += 10;
+    y = sectionTitle(doc, y, 1, 'Ringkasan Temuan');
+    const totalFindings = inspections.reduce((a,i)=> a + (i.findings?.length||0), 0);
+    const critical = inspections.reduce((a,i)=> a + (i.findings?.filter(f=>f.riskRating==='Kritis').length||0), 0);
+    const open = inspections.reduce((a,i)=> a + (i.findings?.filter(f=>f.status==='Terbuka').length||0), 0);
+    const closed = inspections.reduce((a,i)=> a + (i.findings?.filter(f=>f.status==='Selesai').length||0), 0);
+    y = kvRow(doc, y, 'Total Sesi Inspeksi', String(inspections.length));
+    y = kvRow(doc, y, 'Total Temuan', String(totalFindings));
+    y = kvRow(doc, y, 'Temuan Kritis', String(critical));
+    y = kvRow(doc, y, 'Temuan Terbuka', String(open));
+    y = kvRow(doc, y, 'Temuan Selesai', String(closed));
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportInspectionRecap(inspections, company){ const doc = _generateInspectionRecapPdf(inspections, company); download(doc, 'Rekap-Inspeksi-K3.pdf'); }
+
+  // ===================== INVESTIGASI: Single PDF =====================
+  function _generateInvestigationSinglePdf(inv, company){
+    const doc = newDoc(); doc._reportTitle = 'LAPORAN INVESTIGASI INSIDEN'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('LAPORAN INVESTIGASI KECELAKAAN KERJA', MARGIN, y+2); y += 9;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('No. Dokumen: INV-' + inv.id.toUpperCase() + '  |  Tanggal Cetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    y = sectionTitle(doc, y, 1, 'Data Umum Insiden');
+    y = kvRow(doc, y, 'Perusahaan', company?company.name:'-'); y = kvRow(doc, y, 'Jenis Insiden', inv.incidentType); y = kvRow(doc, y, 'Tanggal & Waktu', AppCore.fmtDateTime(inv.dateTime)); y = kvRow(doc, y, 'Lokasi Kejadian', inv.location); y = kvRow(doc, y, 'Dilaporkan Oleh', inv.reporter); y = kvRow(doc, y, 'Tim Investigasi', inv.investigationTeam); y += 3;
+    y = sectionTitle(doc, y, 2, 'Data Korban & Cedera');
+    y = kvRow(doc, y, 'Nama Korban', inv.victimName||'Tidak ada korban'); y = kvRow(doc, y, 'Jabatan/Unit Kerja', inv.victimPosition); y = kvRow(doc, y, 'Bagian Tubuh Cedera', inv.bodyPart);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...COL_GRAY); doc.text('Klasifikasi Keparahan', MARGIN, y);
+    badge(doc, MARGIN+48, y, inv.severity.toUpperCase(), levelColor(inv.severity)); y += 8;
+    y = kvRow(doc, y, 'Hari Kerja Hilang', (inv.lostDays||0) + ' hari'); y += 3;
+    y = sectionTitle(doc, y, 3, 'Kronologi Kejadian'); y = paragraph(doc, y, inv.chronology);
+    y = sectionTitle(doc, y, 4, 'Analisis Akar Penyebab'); y = kvRow(doc, y, 'Penyebab Langsung', inv.immediateCause);
+    if(inv.rootCauses && inv.rootCauses.length){ const rows = inv.rootCauses.map((c,idx)=>[String(idx+1), c.category, c.description]); y = simpleTable(doc, y, ['No','Kategori','Uraian Akar Penyebab'], rows, [10,50,112]); }
+    y = sectionTitle(doc, y, 5, 'Tindakan Korektif & Pencegahan');
+    if(inv.correctiveActions && inv.correctiveActions.length){ const rows = inv.correctiveActions.map((a,idx)=>[String(idx+1), a.action, a.pic, AppCore.fmtDate(a.dueDate), a.status]); y = simpleTable(doc, y, ['No','Tindakan','PIC','Target','Status'], rows, [10,80,35,30,17]); }
+    else { y = paragraph(doc, y, 'Belum ada tindakan korektif dicatat.'); }
+    y = sectionTitle(doc, y, 6, 'Klasifikasi Kerugian & Pembelajaran'); y = kvRow(doc, y, 'Estimasi Kerugian', inv.lossEstimate); y = kvRow(doc, y, 'Lessons Learned', inv.lessonsLearned); y = kvRow(doc, y, 'Status Investigasi', inv.status);
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportInvestigationSingle(inv, company){ const doc = _generateInvestigationSinglePdf(inv, company); download(doc, 'Laporan-Investigasi-' + (inv.location||'lokasi').replace(/\s+/g,'-') + '.pdf'); }
+
+  // ===================== INVESTIGASI: Recap PDF =====================
+  function _generateInvestigationRecapPdf(investigations, company){
+    const doc = newDoc(); doc._reportTitle = 'REKAPITULASI INVESTIGASI INSIDEN'; doc._company = company; let y = drawHeader(doc, doc._reportTitle, company);
+    doc.setFontSize(15); doc.setFont('helvetica','bold'); doc.setTextColor(...COL_NAVY); doc.text('REKAPITULASI INVESTIGASI KECELAKAAN KERJA', MARGIN, y+2); y += 10;
+    doc.setFontSize(8.5); doc.setFont('helvetica','normal'); doc.setTextColor(...COL_GRAY); doc.text('Total ' + investigations.length + ' laporan insiden  |  Dicetak: ' + new Date().toLocaleDateString('id-ID'), MARGIN, y); y += 8;
+    const rows = investigations.map(i=>[AppCore.fmtDate(i.dateTime), i.incidentType, i.location, i.victimName||'-', i.severity, i.status]);
+    y = simpleTable(doc, y, ['Tanggal/Waktu','Jenis Insiden','Lokasi','Korban','Keparahan','Status'], rows, [30,42,40,32,30,16]); y += 10;
+    y = sectionTitle(doc, y, 1, 'Ringkasan Insiden');
+    const fatal = investigations.filter(i=> i.severity==='Fatal / Meninggal Dunia').length;
+    const lti = investigations.filter(i=> i.severity==='Hilang Hari Kerja (Lost Time Injury)').length;
+    const openInv = investigations.filter(i=> i.status!=='Ditutup').length;
+    y = kvRow(doc, y, 'Total Insiden', String(investigations.length));
+    y = kvRow(doc, y, 'Insiden Fatal', String(fatal));
+    y = kvRow(doc, y, 'Lost Time Injury', String(lti));
+    y = kvRow(doc, y, 'Investigasi Berjalan', String(openInv));
+    finalizeDoc(doc);
+    return doc;
+  }
+  function exportInvestigationRecap(investigations, company){ const doc = _generateInvestigationRecapPdf(investigations, company); download(doc, 'Rekap-Investigasi-Insiden.pdf'); }
+
+  // ===================== WORD EXPORT =====================
+  function dx(){ return window.docx; }
+
+  function wTableCell(text, opts){
+    opts = opts || {};
+    const { TableCell, Paragraph, TextRun, WidthType, BorderStyle } = dx();
+    const borders = {
+      top: { style: BorderStyle.SINGLE, size: 6, color: 'E2E5E0' },
+      bottom: { style: BorderStyle.SINGLE, size: 6, color: 'E2E5E0' },
+      left: { style: BorderStyle.SINGLE, size: 6, color: 'E2E5E0' },
+      right: { style: BorderStyle.SINGLE, size: 6, color: 'E2E5E0' },
+    };
+    return new TableCell({
+      width: { size: opts.width || 20, type: WidthType.PERCENTAGE },
+      shading: opts.shading ? { fill: opts.shading, type: 'clear' } : undefined,
+      verticalAlign: 'center',
+      children: [new Paragraph({
+        spacing: { before: 60, after: 60 },
+        children: [new TextRun({
+          text: String(text || '-'),
+          bold: !!opts.bold,
+          size: opts.size || 18,
+          color: opts.color || '15191E',
+          font: opts.font || 'Inter',
+        })],
+      })],
+      borders,
+    });
+  }
+
+  function wTableHeaderCell(text, opts){
+    opts = opts || {};
+    return wTableCell(text, { bold: true, shading: 'EEF1ED', color: '3A414B', size: 17 });
+  }
+
+  function wTableRow(cells, isHeader){
+    isHeader = isHeader || false;
+    const { TableRow } = dx();
+    return new TableRow({ children: isHeader ? cells.map(c=> typeof c==='string' ? wTableHeaderCell(c) : c) : cells.map(c=> typeof c==='string' ? wTableCell(c) : c) });
+  }
+
+  function wTable(headers, rows, opts){
+    opts = opts || {};
+    const { Table, WidthType } = dx();
+    const headerRow = wTableRow(headers, true);
+    const dataRows = rows.map(r=> wTableRow(r));
+    return new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [headerRow, ...dataRows],
+      ...(opts.layout ? { layout: opts.layout } : {}),
+    });
+  }
+
+  function wHeading(text, level){ const { Paragraph, TextRun, HeadingLevel } = dx(); return new Paragraph({ heading: level, spacing:{ before:200, after:100 }, children:[ new TextRun({ text, bold:true, color:'0B1F3A' }) ] }); }
+  function wSectionTitle(num, text){ const { Paragraph, TextRun, BorderStyle } = dx(); return new Paragraph({ spacing:{ before:260, after:120 }, border:{ bottom:{ color:'EEF1ED', space:4, style:BorderStyle.SINGLE, size:10 } }, children:[ new TextRun({ text: num + '. ' + text.toUpperCase(), bold:true, color:'0B1F3A', size:24 }) ] }); }
+  function wKv(label, value){ const { Paragraph, TextRun } = dx(); return new Paragraph({ spacing:{ after:80 }, children:[ new TextRun({ text: label+': ', bold:true, color:'6B7280', size:19 }), new TextRun({ text: String(value||'-'), color:'15191E', size:19 }) ] }); }
+  function wPara(text, opts){ opts = opts || {}; const { Paragraph, TextRun } = dx(); return new Paragraph({ spacing:{ after:120 }, children:[ new TextRun({ text:String(text||'-'), size:19, bold:!!opts.bold }) ] }); }
+  function wTitlePage(reportTitle, subtitle, company, docNo){
+    const { Paragraph, TextRun, AlignmentType } = dx();
+    return [
+      new Paragraph({ alignment: AlignmentType.LEFT, spacing:{ after:40 }, children:[ new TextRun({ text:'PRISMA K3', bold:true, color:'F4A300', size:20 }) ] }),
+      new Paragraph({ spacing:{ after:200 }, children:[ new TextRun({ text:'Sistem Informasi Manajemen Keselamatan & Kesehatan Kerja', italics:true, color:'6B7280', size:16 }) ] }),
+      new Paragraph({ spacing:{ after:60 }, children:[ new TextRun({ text:reportTitle.toUpperCase(), bold:true, size:30, color:'0B1F3A' }) ] }),
+      new Paragraph({ spacing:{ after:200 }, children:[ new TextRun({ text:subtitle, size:20, color:'3A414B' }) ] }),
+      new Paragraph({ children:[ new TextRun({ text:'Perusahaan: ' + (company?company.name:'-'), size:19, bold:true }) ] }),
+      new Paragraph({ spacing:{after:40}, children:[ new TextRun({ text:'Alamat: ' + (company?company.address:'-'), size:18, color:'6B7280' }) ] }),
+      new Paragraph({ spacing:{after:200}, children:[ new TextRun({ text:'No. Dokumen: ' + docNo + '  |  Dicetak: ' + new Date().toLocaleString('id-ID'), size:16, italics:true, color:'A2A9B4' }) ] }),
+    ];
+  }
+  function buildAndDownloadDocx(children, filename){
+    try {
+      const { Document, Packer } = dx();
+      const doc = new Document({ sections:[{ properties:{}, children }] });
+      Packer.toBlob(doc).then(blob=>{ const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); AppCore.toast('Laporan Word berhasil diunduh', 'success'); }).catch(err=>{ console.error(err); AppCore.toast('Gagal membuat dokumen Word', 'error'); });
+    } catch(err) {
+      console.error('Word export error:', err);
+      AppCore.toast('Gagal membuat dokumen Word: ' + (err.message || 'Unknown error'), 'error');
+    }
+  }
+
+  // ===================== RISIKO: Single Word =====================
+  function exportRiskSingleWord(r, company){
+    try {
+      const initLevel = RisikoPage.riskLevel(r.initialScore);
+      const children = [
+        ...wTitlePage('Laporan Manajemen Risiko K3','Identifikasi, Kajian, Pengendalian, Komunikasi & Monitoring Risiko', company, 'HIRADC-' + r.id.toUpperCase()),
+        wSectionTitle(1,'Identifikasi Bahaya'),
+        wKv('Area / Lokasi', r.area), wKv('Aktivitas', r.activity), wKv('Jenis Bahaya', r.hazardType), wKv('Sumber Bahaya', r.hazardSource), wKv('Deskripsi Bahaya', r.hazardDesc), wKv('Potensi Dampak', r.potentialImpact), wKv('Pekerja Terpapar', r.exposedWorkers),
+        wSectionTitle(2,'Kajian Risiko (Matriks 5x5)'),
+        wKv('Kemungkinan', r.likelihood + ' \u2014 ' + (RisikoPage.LIKELIHOOD.find(l=>l.v===r.likelihood)?.label||'')), wKv('Keparahan', r.severity + ' \u2014 ' + (RisikoPage.SEVERITY.find(s=>s.v===r.severity)?.label||'')), wKv('Tingkat Risiko Awal', initLevel.label + ' (Skor ' + r.initialScore + ')'),
+        ...(r.residualScore ? [wKv('Tingkat Risiko Residual', RisikoPage.riskLevel(r.residualScore).label + ' (Skor ' + r.residualScore + ')')] : []),
+        wSectionTitle(3,'Pengendalian Risiko (Hierarchy of Control)'),
+        ...RisikoPage.HOC_LEVELS.filter(h=> r.controls && r.controls[h.key] && r.controls[h.key].trim()).flatMap((h,i)=>[ wPara((i+1) + '. ' + h.label, {bold:true}), wPara(r.controls[h.key]) ]),
+        wSectionTitle(4,'Komunikasi Risiko'),
+        wKv('Metode Komunikasi', r.commMethod), wKv('Penanggung Jawab', r.commPic), wKv('Sasaran/Pihak Terkait', r.commAudience), wKv('Tanggal Komunikasi', AppCore.fmtDate(r.commDate)),
+        wSectionTitle(5,'Monitoring Kinerja'),
+        wKv('Status', r.monitoringStatus), wKv('Indikator Kinerja', r.monitoringKpi), wKv('Tanggal Review', AppCore.fmtDate(r.monitoringDate)), wKv('Catatan Review', r.monitoringNotes),
+      ];
+      buildAndDownloadDocx(children, 'Laporan-Risiko-' + (r.area||'area').replace(/\s+/g,'-') + '.docx');
+    } catch(err) {
+      console.error('exportRiskSingleWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== RISIKO: Recap Word =====================
+  function exportRiskRecapWord(risks, company){
+    try {
+      const headers = ['No', 'Area / Lokasi', 'Bahaya', 'Jenis', 'Tk. Risiko Awal', 'Status Monitoring'];
+      const rows = risks.map((r,idx)=>{
+        const lvl = RisikoPage.riskLevel(r.initialScore);
+        return [String(idx+1), r.area, r.hazardDesc, r.hazardType, lvl.label + ' (Skor ' + r.initialScore + ')', r.monitoringStatus||'-'];
+      });
+      const children = [
+        ...wTitlePage('Rekapitulasi Manajemen Risiko K3','Rekap HIRADC Seluruh Risiko Teridentifikasi', company, 'REKAP-HIRADC-' + Date.now().toString(36).toUpperCase()),
+        wSectionTitle(1,'Ringkasan'),
+        wKv('Total Risiko Teridentifikasi', String(risks.length)),
+        wKv('Risiko Ekstrem', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Ekstrem').length)),
+        wKv('Risiko Tinggi', String(risks.filter(r=>RisikoPage.riskLevel(r.initialScore).label==='Tinggi').length)),
+        wSectionTitle(2,'Daftar Risiko'),
+        wTable(headers, rows),
+      ];
+      buildAndDownloadDocx(children, 'Rekap-Manajemen-Risiko.docx');
+    } catch(err) {
+      console.error('exportRiskRecapWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== INSPEKSI: Single Word =====================
+  function exportInspectionSingleWord(insp, company){
+    try {
+      const findingsBlocks = (insp.findings||[]).flatMap((f,idx)=>[ wPara('Temuan #' + (idx+1) + ' \u2014 ' + f.type + ' (Risiko: ' + f.riskRating + ')', {bold:true}), wKv('Lokasi', f.location), wKv('Deskripsi', f.description), wKv('Rekomendasi', f.recommendation), wKv('PIC', f.pic), wKv('Target Selesai', AppCore.fmtDate(f.dueDate)), wKv('Status', f.status) ]);
+      const children = [
+        ...wTitlePage('Laporan Inspeksi K3','Hasil Inspeksi K3 Lapangan', company, 'INSP-' + insp.id.toUpperCase()),
+        wSectionTitle(1,'Data Umum Inspeksi'),
+        wKv('Area / Lokasi', insp.area), wKv('Tanggal', AppCore.fmtDate(insp.date)), wKv('Shift', insp.shift), wKv('Inspektor', insp.inspector), wKv('Didampingi Oleh', insp.accompaniedBy), wKv('Kategori Inspeksi', (insp.categories||[]).join(', ')),
+        wSectionTitle(2,'Daftar Temuan'),
+        ...(findingsBlocks.length ? findingsBlocks : [wPara('Tidak ditemukan kondisi/tindakan tidak aman pada inspeksi ini.')]),
+        wSectionTitle(3,'Kesimpulan'),
+        wKv('Kesimpulan Umum', insp.conclusion), wKv('Ditandatangani Oleh', insp.signedBy),
+      ];
+      buildAndDownloadDocx(children, 'Laporan-Inspeksi-' + (insp.area||'area').replace(/\s+/g,'-') + '.docx');
+    } catch(err) {
+      console.error('exportInspectionSingleWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== INSPEKSI: Recap Word =====================
+  function exportInspectionRecapWord(inspections, company){
+    try {
+      const headers = ['No', 'Tanggal', 'Area', 'Inspektor', 'Jml Temuan', 'Risiko Tertinggi', 'Status'];
+      const rows = inspections.map((insp,idx)=>{
+        const st = InspeksiPage.overallStatus(insp);
+        const hr = InspeksiPage.highestRisk(insp.findings);
+        return [String(idx+1), AppCore.fmtDate(insp.date), insp.area, insp.inspector, String(insp.findings?.length||0), hr||'-', st];
+      });
+      const children = [
+        ...wTitlePage('Rekapitulasi Inspeksi K3','Rekap Hasil Inspeksi K3 Lapangan', company, 'REKAP-INSP-' + Date.now().toString(36).toUpperCase()),
+        wSectionTitle(1,'Ringkasan'),
+        wKv('Total Sesi Inspeksi', String(inspections.length)),
+        wKv('Total Temuan', String(inspections.reduce((a,i)=>a+(i.findings?.length||0),0))),
+        wKv('Temuan Kritis', String(inspections.reduce((a,i)=>a+(i.findings?.filter(f=>f.riskRating==='Kritis').length||0),0))),
+        wSectionTitle(2,'Daftar Inspeksi'),
+        wTable(headers, rows),
+      ];
+      buildAndDownloadDocx(children, 'Rekap-Inspeksi-K3.docx');
+    } catch(err) {
+      console.error('exportInspectionRecapWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== INVESTIGASI: Single Word =====================
+  function exportInvestigationSingleWord(inv, company){
+    try {
+      const causeBlocks = (inv.rootCauses||[]).flatMap((c,idx)=>[ wKv('Penyebab ' + (idx+1) + ' (' + c.category + ')', c.description) ]);
+      const actionBlocks = (inv.correctiveActions||[]).flatMap((a,idx)=>[ wPara('Tindakan #' + (idx+1) + ': ' + a.action, {bold:true}), wKv('PIC', a.pic), wKv('Target', AppCore.fmtDate(a.dueDate)), wKv('Status', a.status) ]);
+      const children = [
+        ...wTitlePage('Laporan Investigasi Insiden','Investigasi & Pelaporan Kecelakaan Kerja', company, 'INV-' + inv.id.toUpperCase()),
+        wSectionTitle(1,'Data Umum Insiden'),
+        wKv('Jenis Insiden', inv.incidentType), wKv('Tanggal & Waktu', AppCore.fmtDateTime(inv.dateTime)), wKv('Lokasi Kejadian', inv.location), wKv('Dilaporkan Oleh', inv.reporter), wKv('Tim Investigasi', inv.investigationTeam),
+        wSectionTitle(2,'Data Korban & Cedera'),
+        wKv('Nama Korban', inv.victimName||'Tidak ada korban'), wKv('Jabatan/Unit Kerja', inv.victimPosition), wKv('Bagian Tubuh Cedera', inv.bodyPart), wKv('Klasifikasi Keparahan', inv.severity), wKv('Hari Kerja Hilang', (inv.lostDays||0) + ' hari'),
+        wSectionTitle(3,'Kronologi Kejadian'), wPara(inv.chronology),
+        wSectionTitle(4,'Analisis Akar Penyebab'), wKv('Penyebab Langsung', inv.immediateCause), ...(causeBlocks.length ? causeBlocks : [wPara('Belum ada akar penyebab dicatat.')]),
+        wSectionTitle(5,'Tindakan Korektif & Pencegahan'), ...(actionBlocks.length ? actionBlocks : [wPara('Belum ada tindakan korektif dicatat.')]),
+        wSectionTitle(6,'Klasifikasi Kerugian & Pembelajaran'), wKv('Estimasi Kerugian', inv.lossEstimate), wKv('Lessons Learned', inv.lessonsLearned), wKv('Status Investigasi', inv.status),
+      ];
+      buildAndDownloadDocx(children, 'Laporan-Investigasi-' + (inv.location||'lokasi').replace(/\s+/g,'-') + '.docx');
+    } catch(err) {
+      console.error('exportInvestigationSingleWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== INVESTIGASI: Recap Word =====================
+  function exportInvestigationRecapWord(investigations, company){
+    try {
+      const headers = ['No', 'Tanggal/Waktu', 'Jenis Insiden', 'Lokasi', 'Korban', 'Keparahan', 'Status'];
+      const rows = investigations.map((inv,idx)=>[
+        String(idx+1), AppCore.fmtDate(inv.dateTime), inv.incidentType, inv.location, inv.victimName||'-', inv.severity, inv.status
+      ]);
+      const children = [
+        ...wTitlePage('Rekapitulasi Investigasi Insiden','Rekap Investigasi & Pelaporan Kecelakaan Kerja', company, 'REKAP-INV-' + Date.now().toString(36).toUpperCase()),
+        wSectionTitle(1,'Ringkasan'),
+        wKv('Total Insiden Tercatat', String(investigations.length)),
+        wKv('Insiden Fatal', String(investigations.filter(i=> i.severity==='Fatal / Meninggal Dunia').length)),
+        wKv('Lost Time Injury', String(investigations.filter(i=> i.severity==='Hilang Hari Kerja (Lost Time Injury)').length)),
+        wKv('Investigasi Berjalan', String(investigations.filter(i=> i.status!=='Ditutup').length)),
+        wSectionTitle(2,'Daftar Laporan Insiden'),
+        wTable(headers, rows),
+      ];
+      buildAndDownloadDocx(children, 'Rekap-Investigasi-Insiden.docx');
+    } catch(err) {
+      console.error('exportInvestigationRecapWord error:', err);
+      AppCore.toast('Gagal export Word: ' + err.message, 'error');
+    }
+  }
+
+  // ===================== FORMAT PICKER =====================
+  function pickFormat(onPdf, onWord){
+    AppCore.openModal({
+      title:'Unduh Laporan', subtitle:'Pilih format dokumen yang ingin diunduh',
+      bodyHtml:'<div style="display:flex; gap:14px;">' +
+        '<button class="btn btn-outline" id="pickPdfBtn" style="flex:1; flex-direction:column; padding:22px; gap:8px;">' +
+          '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.6"/><path d="M14 2v6h6" stroke="currentColor" stroke-width="1.6"/></svg>' +
+          '<span style="font-weight:700;">Dokumen PDF</span><span style="font-size:11px; color:var(--ink-500); font-weight:400;">Format cetak siap arsip</span>' +
+        '</button>' +
+        '<button class="btn btn-outline" id="pickWordBtn" style="flex:1; flex-direction:column; padding:22px; gap:8px;">' +
+          '<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="1.6"/><path d="M14 2v6h6M8 13l1.5 6L11 14l1.5 5L14 13" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' +
+          '<span style="font-weight:700;">Dokumen Word</span><span style="font-size:11px; color:var(--ink-500); font-weight:400;">Format dapat diedit (.docx)</span>' +
+        '</button>' +
+      '</div>',
+      onMount:()=>{
+        document.getElementById('pickPdfBtn').addEventListener('click', ()=>{ AppCore.closeModal(); if(onPdf) onPdf(); });
+        document.getElementById('pickWordBtn').addEventListener('click', ()=>{ AppCore.closeModal(); if(onWord) onWord(); });
+      }
+    });
+  }
+
+  // Assign ke window.ExportEngine
+  window.ExportEngine = {
+    pickFormat,
+    exportRiskSingle, exportInspectionSingle, exportInvestigationSingle,
+    exportRiskRecap, exportInspectionRecap, exportInvestigationRecap,
+    _generateRiskSinglePdf, _generateRiskRecapPdf,
+    _generateInspectionSinglePdf, _generateInspectionRecapPdf,
+    _generateInvestigationSinglePdf, _generateInvestigationRecapPdf,
+    exportRiskSingleWord, exportInspectionSingleWord, exportInvestigationSingleWord,
+    exportRiskRecapWord, exportInspectionRecapWord, exportInvestigationRecapWord,
+  };
+})();
+</script>
+
+<script>
+/* ============================================================
+   MAIN - Inisialisasi tambahan & pengaman global
+   ============================================================ */
+(function(){
+  window.addEventListener('error', function(e){ console.error('PRISMA K3 Error:', e.error || e.message); });
+  document.addEventListener('DOMContentLoaded', function(){
+    try{ const testKey = '__prismak3_test__'; localStorage.setItem(testKey, '1'); localStorage.removeItem(testKey); }catch(e){
+      alert('Penyimpanan lokal (localStorage) tidak tersedia di browser ini. Data tidak akan tersimpan setelah refresh. Pastikan Anda tidak menggunakan mode penyamaran/incognito.');
+    }
+  });
+})();
+</script>
+</body>
+</html>
